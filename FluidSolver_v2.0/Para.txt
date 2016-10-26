@@ -1,0 +1,18 @@
+effective radius
+2.6
+Prandtl number
+0.71
+Rayleigh number
+1.e6
+cfl number
+0.01
+maximum dt
+1.e-1
+total time
+1000.
+epsilon
+1.e-15
+alpha
+1.0
+beta
+1.0

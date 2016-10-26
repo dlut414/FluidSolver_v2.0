@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FluidSolver_v2.0", "FluidSolver_v2.0\FluidSolver_v2.0.vcxproj", "{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183} = {9089AE7D-A75E-4656-BBF5-BA9DAF908183}
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422} = {F9DB6D93-E485-4F72-B714-A4D7DC618422}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VisualizationDll", "VisualizationDll\VisualizationDll.vcxproj", "{9089AE7D-A75E-4656-BBF5-BA9DAF908183}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimulationDll", "SimulationDll\SimulationDll.vcxproj", "{F9DB6D93-E485-4F72-B714-A4D7DC618422}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{3C6A21C5-D465-437C-AE1C-1075E7176358}"
+	ProjectSection(SolutionItems) = preProject
+		common\BBox.h = common\BBox.h
+		common\Camera.h = common\Camera.h
+		common\Controller.h = common\Controller.h
+		common\Derivative.h = common\Derivative.h
+		common\LinkCell.h = common\LinkCell.h
+		common\mMath.h = common\mMath.h
+		common\Polynomial.h = common\Polynomial.h
+		common\PreInformation.h = common\PreInformation.h
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Debug|Win32.Build.0 = Debug|Win32
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Debug|x64.ActiveCfg = Debug|x64
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Debug|x64.Build.0 = Debug|x64
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Release|Win32.ActiveCfg = Release|Win32
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Release|Win32.Build.0 = Release|Win32
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Release|x64.ActiveCfg = Release|x64
+		{D20F08EF-77D6-4FEA-BF46-3FE20F66F12E}.Release|x64.Build.0 = Release|x64
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Debug|Win32.Build.0 = Debug|Win32
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Debug|x64.ActiveCfg = Debug|x64
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Debug|x64.Build.0 = Debug|x64
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Release|Win32.ActiveCfg = Release|Win32
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Release|Win32.Build.0 = Release|Win32
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Release|x64.ActiveCfg = Release|x64
+		{9089AE7D-A75E-4656-BBF5-BA9DAF908183}.Release|x64.Build.0 = Release|x64
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Debug|Win32.Build.0 = Debug|Win32
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Debug|x64.ActiveCfg = Debug|x64
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Debug|x64.Build.0 = Debug|x64
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Release|Win32.ActiveCfg = Release|Win32
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Release|Win32.Build.0 = Release|Win32
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Release|x64.ActiveCfg = Release|x64
+		{F9DB6D93-E485-4F72-B714-A4D7DC618422}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
