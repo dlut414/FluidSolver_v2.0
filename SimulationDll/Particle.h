@@ -109,6 +109,9 @@ namespace SIM {
 		void updateCell() {
 			cell->update(pos[0].data(), pos[1].data(), np);
 		}
+		void getBBox(R& left, R& right, R& bottom, R& top) const {
+			cell->getBBox(left, right, bottom, top);
+		}
 
 		void b2b() {
 			//bbMap.clear();

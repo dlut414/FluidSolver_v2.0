@@ -64,6 +64,9 @@ namespace SIM {
 	void SimulationDll2D::SensorOut() {
 		objPtr->sensorOut();
 	}
+	void SimulationDll2D::BBox(double& left, double& right, double& bottom, double& top) {
+		objPtr->part->getBBox(left, right, bottom, top);
+	}
 
 }
 

@@ -72,9 +72,9 @@ namespace SIM {
 
 		void Redistribute() {
 			//shi.SpringLSIModel(part, para);
-			//shi.SpringULSIModel(part, para);
+			shi.SpringULSIModel(part, para);
 			//shi.StaticLSIModel(part);
-			shi.StaticULSIModel(part);
+			//shi.StaticULSIModel(part);
 
 			//shi.StaticWENOModel(part);
 		}

@@ -27,6 +27,11 @@ namespace SIM {
 		LinkCell(const BBox<T,2>& b, const R& s) : box(b), cSize(s), cSizeInv(R(1)/s) { initialize(); }
 		~LinkCell() { finalize(); }
 
+		void getBBox(R& left, R& right, R& bottom, R& top) const {
+			left = box.pMin[0]; right = box.pMax[0];
+			bottom = box.pMin[1]; top = box.pMax[1];
+		}
+
 		struct blockSize { enum { value = mMath::Power<3,2>::value, }; };
 		
 		__forceinline const int pos2cell(const R& x) const { return int(cSizeInv*x); }

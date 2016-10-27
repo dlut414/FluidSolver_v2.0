@@ -11,7 +11,7 @@
 
 namespace VIS {
 
-	enum DISPLAYMODE { DMODE_ONE = 1, DMODE_TWO = 2, DMODE_THREE = 3, DMODE_FOUR = 4, };
+	enum DISPLAYMODE { DMODE_ONE = 1, DMODE_TWO = 2, DMODE_THREE = 3, DMODE_FOUR = 4, DMODE_FIVE = 5, DMODE_SIX = 6, };
 
 	class Controller {
 	public:
@@ -25,7 +25,7 @@ namespace VIS {
 			m_rotation = m_initRotation = glm::angleAxis<float>(-glm::pi<float>() * 0.f, glm::vec3(1, 0, 0));;
 			m_pan = m_initPan = glm::vec3(0.f, 0.f, 0.f);
 
-			m_initCameraPosition = glm::vec3(0.5f, 0.5f, 2.0f);
+			m_initCameraPosition = glm::vec3(0.0f, 0.0f, 1.0f);
 			m_initCameraRotation = glm::angleAxis<float>(glm::pi<float>() * 0.0f, glm::vec3(1, 0, 0));
 
 			f_pointRadius = 2.0f;
@@ -43,8 +43,8 @@ namespace VIS {
 			i_bmp = 0;
 			i_senSwitch = 1;
 			i_bmpSwitch = 1;
-			u_width = 800;
-			u_height = 800;
+			u_width = 1600;
+			u_height = 250;
 			f_sRangeMax = 1.0f;
 			f_sRangeMin = -1.0f;
 
@@ -53,6 +53,13 @@ namespace VIS {
 			m_camera.SetProjectionOR(-0.55f*float(u_width) / float(u_height), 0.55f*float(u_width) / float(u_height), -0.55f, 0.55f, f_near, f_far);
 		}
 		~Controller() {}
+
+		void setProjectionOR(float left, float right, float bottom, float top) {
+			const float whRatio = float(u_width) / float(u_height);
+			const float centerX = (left + right) / 2;
+			const float dX = whRatio* (top - bottom);
+			m_camera.SetProjectionOR(centerX - dX / 2, centerX + dX / 2, bottom, top, f_near, f_far);
+		}
 
 		void clickMouse(int button, int state, int x, int y) {
 			m_mousePos = glm::ivec2(x, y);

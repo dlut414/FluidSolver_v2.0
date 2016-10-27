@@ -19,6 +19,8 @@ enum pType {
 	FLUID = 0,
 	BD1 = 1,
 	BD2 = 2,
+	INLET = 3,
+	OUTLET = 4,
 };
 
 #define V_DIRICHLET		0x00000001

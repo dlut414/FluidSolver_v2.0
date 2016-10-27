@@ -42,7 +42,16 @@ void showCircle() {
 void paintRGB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = (fS1 - sRangeMin) / range;
-	if (fType == 0 || fType == 1) {
+	if (fType == 2) {
+		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
+	}
+	else if (fType == 3) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
+	else if (fType == 4) {
+		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -52,16 +61,22 @@ void paintRGB() {
 		else
 			color = red;
 	}
-	else {
-		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
-	}
 	color.a = 1.0f;
 }
 
 void paintRB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = 2.0f* (fS1 - sRangeMin) / range - 1.0f;
-	if(fType == 0 || fType == 1) {
+	if (fType == 2) {
+		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
+	}
+	else if (fType == 3) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
+	else if (fType == 4) {
+		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)
@@ -70,9 +85,6 @@ void paintRB() {
 			color = blue;
 		else
 			color = red;
-	}
-	else {
-		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
 	color.a = 1.0f;
 }
@@ -114,7 +126,16 @@ void showCircle() {
 void paintRGB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = (fS1 - sRangeMin) / range;
-	if (fType == 0 || fType == 1) {
+	if(fType == 2) {
+		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
+	}
+	else if (fType == 3) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
+	else if (fType == 4) {
+		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -124,16 +145,22 @@ void paintRGB() {
 		else
 			color = red;
 	}
-	else {
-		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
-	}
 	color.a = 1.0f;
 }
 
 void paintRB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = 2.0f* (fS1 - sRangeMin) / range - 1.0f;
-	if (fType == 0 || fType == 1) {
+	if (fType == 2) {
+		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
+	}
+	else if (fType == 3) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
+	else if (fType == 4) {
+		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	}
+	else {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)
@@ -142,9 +169,6 @@ void paintRB() {
 			color = blue;
 		else
 			color = red;
-	}
-	else {
-		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
 	color.a = 1.0f;
 }
