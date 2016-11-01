@@ -1,8 +1,3 @@
-// Manipulator.cpp : Defines the entry point for the console application.
-//
-
-#include "stdafx.h"
-
 /*
 * LICENCE
 * copyright 2014 ~ ****
@@ -10,6 +5,10 @@
 * Author: HUFANGYUAN
 * Released under CC BY-NC
 */
+// Manipulator.cpp : Defines the entry point for the console application.
+//
+
+#include "stdafx.h"
 ///Manipulator.cpp main loop
 #pragma once
 #include <Controller.h>

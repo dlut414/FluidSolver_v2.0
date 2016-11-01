@@ -148,7 +148,8 @@
   <ItemGroup>
     <ClInclude Include="Base.h" />
     <ClInclude Include="FractionalStep_DD.h" />
-    <ClInclude Include="FractionalStep_KM_A.h" />
+    <ClInclude Include="FractionalStep_KM_A_BDF.h" />
+    <ClInclude Include="FractionalStep_KM_A_BFSF.h" />
     <ClInclude Include="FractionalStep_X.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="LinkCell.h" />

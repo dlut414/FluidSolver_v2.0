@@ -10,14 +10,14 @@
 
 #include "stdafx.h"
 #include "SimulationDll.h"
-#include "FractionalStep_KM_A.h"
+#include "FractionalStep_KM_A_BFSF.h"
 #include "FractionalStep_DD.h"
 #include "FractionalStep_X.h"
 #include <PreInformation.h>
 
 namespace SIM {
 
-	typedef FractionalStep_KM_A<Parameters::DataType, Parameters::Dimension, Parameters::Order> FS;
+	typedef FractionalStep_KM_A_BFSF<Parameters::DataType, Parameters::Dimension, Parameters::Order> FS;
 	typedef FS* FSPtr;
 
 	static FSPtr objPtr;

@@ -764,31 +764,6 @@ namespace SIM {
 			}
 		}
 
-		void init_x() {
-			invNeu.clear();
-			invMat.clear();
-			for (int p = 0; p < np; p++) {
-				invMat.push_back(MatPP());
-				if (type[p] == BD1) invNeu[p] = MatPP::Zero();
-			}
-			varrho = 1. / (1.*dp);
-			Vec zero = Vec::Zero();
-			DR::Run<1, 0>(varrho, zero.data(), pn_px_o.data());
-			DR::Run<0, 1>(varrho, zero.data(), pn_py_o.data());
-			DR::Run<2, 0>(varrho, zero.data(), pn_pxx_o.data());
-			DR::Run<1, 1>(varrho, zero.data(), pn_pxy_o.data());
-			DR::Run<0, 2>(varrho, zero.data(), pn_pyy_o.data());
-			DR::Run<1, 0>(varrho, zero.data(), pn_p_o.block<1, PN::value>(0, 0).data());
-			DR::Run<0, 1>(varrho, zero.data(), pn_p_o.block<1, PN::value>(1, 0).data());
-			DR::Run<2, 0>(varrho, zero.data(), pn_pp_o.block<1, PN::value>(0, 0).data());
-			DR::Run<1, 1>(varrho, zero.data(), pn_pp_o.block<1, PN::value>(1, 0).data());
-			DR::Run<0, 2>(varrho, zero.data(), pn_pp_o.block<1, PN::value>(2, 0).data());
-			pn_lap_o = pn_pxx_o + pn_pyy_o;
-
-			DRH::Run<1, 0>(varrho, zero.data(), pnH_px_o.data());
-			DRH::Run<0, 1>(varrho, zero.data(), pnH_py_o.data());
-		}
-
 		const R DivH(const R* const phix, const R* const phiy, const int& p) const {
 			typedef Eigen::Matrix<R,PNH::value,1> VecPH;
 			typedef Eigen::Matrix<R,PNH::value,PNH::value> MatPPH;
@@ -863,6 +838,52 @@ namespace SIM {
 				const R pvpy = pn_py_o* invMat[p] * vvy;
 				DG[p] = pupx + pvpy;
 			}
+		}
+
+		const int NearestFluid(const int& p) {
+			int id = p;
+			R dis = std::numeric_limits<R>::max();
+			const int cx = cell->pos2cell(pos[0][p]);
+			const int cy = cell->pos2cell(pos[1][p]);
+			for (int i = 0; i < cell->blockSize::value; i++) {
+				const int key = cell->hash(cx, cy, i);
+				for (int m = 0; m < cell->linkList[key].size(); m++) {
+					const int q = cell->linkList[key][m];
+					if (type[q] != FLUID) continue;
+					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+					const R dr2 = (dr[0] * dr[0] + dr[1] * dr[1]);
+					if (dr2 < dis) {
+						dis = dr2;
+						id = q;
+					}
+				}
+			}
+			return id;
+		}
+
+		void init_x() {
+			invNeu.clear();
+			invMat.clear();
+			for (int p = 0; p < np; p++) {
+				invMat.push_back(MatPP());
+				if (type[p] == BD1) invNeu[p] = MatPP::Zero();
+			}
+			varrho = 1. / (1.*dp);
+			Vec zero = Vec::Zero();
+			DR::Run<1, 0>(varrho, zero.data(), pn_px_o.data());
+			DR::Run<0, 1>(varrho, zero.data(), pn_py_o.data());
+			DR::Run<2, 0>(varrho, zero.data(), pn_pxx_o.data());
+			DR::Run<1, 1>(varrho, zero.data(), pn_pxy_o.data());
+			DR::Run<0, 2>(varrho, zero.data(), pn_pyy_o.data());
+			DR::Run<1, 0>(varrho, zero.data(), pn_p_o.block<1, PN::value>(0, 0).data());
+			DR::Run<0, 1>(varrho, zero.data(), pn_p_o.block<1, PN::value>(1, 0).data());
+			DR::Run<2, 0>(varrho, zero.data(), pn_pp_o.block<1, PN::value>(0, 0).data());
+			DR::Run<1, 1>(varrho, zero.data(), pn_pp_o.block<1, PN::value>(1, 0).data());
+			DR::Run<0, 2>(varrho, zero.data(), pn_pp_o.block<1, PN::value>(2, 0).data());
+			pn_lap_o = pn_pxx_o + pn_pyy_o;
+
+			DRH::Run<1, 0>(varrho, zero.data(), pnH_px_o.data());
+			DRH::Run<0, 1>(varrho, zero.data(), pnH_py_o.data());
 		}
 
 	public:
