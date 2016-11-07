@@ -732,7 +732,7 @@ namespace SIM {
 					}
 				}
 
-				if (type[p] == BD1) {
+				if (IS(bdc[p], P_NEUMANN)) {
 					const Vec& inner = bdnorm.at(p);
 					MatPP nn = MatPP::Zero();
 					nn.block<2,2>(0, 0) = ww(0)* inner * inner.transpose();
@@ -866,7 +866,7 @@ namespace SIM {
 			invMat.clear();
 			for (int p = 0; p < np; p++) {
 				invMat.push_back(MatPP());
-				if (type[p] == BD1) invNeu[p] = MatPP::Zero();
+				if (IS(bdc[p], P_NEUMANN)) invNeu[p] = MatPP::Zero();
 			}
 			varrho = 1. / (1.*dp);
 			Vec zero = Vec::Zero();

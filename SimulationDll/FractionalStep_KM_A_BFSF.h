@@ -40,16 +40,33 @@ namespace SIM {
 			part->init(para.k);
 			part->buildCell();
 			part->makeBdc();
-			part->b2b();
-			part->b2normal();
 			part->b2neumann();
 			part->b2dirichlet();
 			part->init_x();
 			sen = new Sensor<R,2,Particle_x<R,2,P>>(part);
 			*sen << "Sensor.in";
+
+			TmpUx.resize(part->np);
+			TmpUy.resize(part->np);
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				TmpUx[p] = part->vel[0][p];
+				TmpUy[p] = part->vel[1][p];
+			}
 		}
 
 		void step() {
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] == INLET) {
+					part->vel[0][p] = TmpUx[p] * (1 - exp(-part->ct));
+					part->vel[1][p] = TmpUy[p] * (1 - exp(-part->ct));
+				}
+			}
 			calInvMat();
 
 			visTerm_i_q1r0();
@@ -64,18 +81,16 @@ namespace SIM {
 			calForVis();
 			check();
 
-			Redistribute();
+			//Redistribute();
 
 			sync();
 		}
 
 		void Redistribute() {
-			//shi.SpringLSIModel(part, para);
-			shi.SpringULSIModel(part, para);
-			//shi.StaticLSIModel(part);
-			//shi.StaticULSIModel(part);
-
-			//shi.StaticWENOModel(part);
+			//SpringLSIModel();
+			SpringULSIModel();
+			//StaticLSIModel();
+			//StaticULSIModel();
 		}
 
 		void visTerm_i_q1r0() {
@@ -96,7 +111,7 @@ namespace SIM {
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == FLUID || part->type[p] == BD1) {
+				if (part->type[p] == FLUID || part->type[p] == BD1 || part->type[p] == INLET || part->type[p] == OUTLET) {
 					part->pres[p] = part->phi[p];
 				}
 			}
@@ -200,22 +215,37 @@ namespace SIM {
 				}
 				else if (part->type[p] == OUTLET) {
 					int q = part->NearestFluid(p);
-					const Vec gradX_q_local = part->Grad(part->vel[0].data(), q);
-					const Vec gradY_q_local = part->Grad(part->vel[1].data(), q);
-
+					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
+					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
+					const Vec norm = part->bdnorm.at(p);
+					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
+					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
+					Vec Dqp;
+					Dqp[0] = part->pos[0][p] - part->pos[0][q];
+					Dqp[1] = part->pos[1][p] - part->pos[1][q];
+					const R vX_p = part->vel[0][q] + gradX_p.dot(Dqp);
+					const R vY_p = part->vel[1][q] + gradY_p.dot(Dqp);
+					const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
+					mSol->rhs[2 * p + 0] = vX_p + para.dt*(para.Pr* lap_local[0]);
+					mSol->rhs[2 * p + 1] = vY_p + para.dt*(para.Pr* lap_local[1]);
+					//mSol->rhs[2 * p + 0] = vX_p;
+					//mSol->rhs[2 * p + 1] = vY_p;
 					continue;
 				}
-				const R rhsx = coef_local* part->vel[0][p];
-				const R rhsy = coef_local* part->vel[1][p];
-				mSol->rhs[2 * p + 0] = rhsx;
-				mSol->rhs[2 * p + 1] = rhsy;
+				else {
+					const R rhsx = coef_local* part->vel[0][p];
+					const R rhsy = coef_local* part->vel[1][p];
+					mSol->rhs[2 * p + 0] = rhsx;
+					mSol->rhs[2 * p + 1] = rhsy;
+					continue;
+				}
 			}
 		}
 
 		void makeLhs_p() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2) {
+				if (part->type[p] == BD1 || part->type[p] == BD2 || part->type[p] == INLET || part->type[p] == OUTLET) {
 					coef.push_back(Tpl(p, p, R(1)));
 					continue;
 				}
@@ -262,6 +292,15 @@ namespace SIM {
 					mSol->b[p] = R(0);
 					continue;
 				}
+				//else if (part->type[p] == INLET || part->type[p] == OUTLET) {
+				//	int q = part->NearestFluid(p);
+				//	const Vec gradP_q = part->Grad(part->phi.data(), q);
+				//	Vec Dqp;
+				//	Dqp[0] = part->pos[0][p] - part->pos[0][q];
+				//	Dqp[1] = part->pos[1][p] - part->pos[1][q];
+				//	mSol->b[p] = part->phi[q] + gradP_q.dot(Dqp);
+				//	continue;
+				//}
 				const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p);
 				mSol->b[p] = coef_local * div_local;
 				if (IS(part->bdc[p], P_NEUMANN)) {
@@ -369,9 +408,87 @@ namespace SIM {
 			}
 		}
 
+		template <int LOOP = 3>
+		void SpringULSIModel() {
+			std::vector<R> Dposx(part->np, R(0));
+			std::vector<R> Dposy(part->np, R(0));
+			std::vector<R> Du1x(part->np, R(0));
+			std::vector<R> Du1y(part->np, R(0));
+			std::vector<R> Du2x(part->np, R(0));
+			std::vector<R> Du2y(part->np, R(0));
+			const R coef = para.umax* para.dt;
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				Dposx[p] = part->pos[0][p];
+				Dposy[p] = part->pos[1][p];
+			}
+			for (int iter = 0; iter < LOOP; iter++) {
+#if OMP
+#pragma omp parallel for
+#endif
+				for (int p = 0; p < part->np; p++) {
+					if (part->type[p] != FLUID) continue;
+					R Dpq[2] = { 0.0, 0.0 };
+					const auto& cell = part->cell;
+					const int cx = cell->pos2cell(part->pos[0][p]);
+					const int cy = cell->pos2cell(part->pos[1][p]);
+					for (int i = 0; i < cell->blockSize::value; i++) {
+						const int key = cell->hash(cx, cy, i);
+						for (int m = 0; m < cell->linkList[key].size(); m++) {
+							const int q = cell->linkList[key][m];
+							if (q == p) continue;
+							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
+							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+							if (dr1 > part->r0) continue;
+							const R w = part->ww(dr1);
+							const R coeff = w / dr1;
+							Dpq[0] -= coeff * dr[0];
+							Dpq[1] -= coeff * dr[1];
+						}
+					}
+					Dposx[p] += coef* Dpq[0];
+					Dposy[p] += coef* Dpq[1];
+				}
+			}
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] != FLUID) continue;
+				const Vec u1 = part->interpolateLSAU(part->vel[0].data(), part->vel[1].data(), p, Dposx[p], Dposy[p]);
+				Du1x[p] = u1[0];
+				Du1y[p] = u1[1];
+			}
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] != FLUID) continue;
+				const Vec u2 = part->interpolateLSAU(part->vel_p1[0].data(), part->vel_p1[1].data(), p, Dposx[p], Dposy[p]);
+				Du2x[p] = u2[0];
+				Du2y[p] = u2[1];
+			}
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] != FLUID) continue;
+				part->pos[0][p] = Dposx[p];
+				part->pos[1][p] = Dposy[p];
+				part->vel[0][p] = Du1x[p];
+				part->vel[1][p] = Du1y[p];
+				part->vel_p1[0][p] = Du2x[p];
+				part->vel_p1[1][p] = Du2y[p];
+			}
+		}
+
 	private:
 		Shifter<R,2> shi;
 		std::vector<Tpl> coef;
+		std::vector<R> TmpUx;
+		std::vector<R> TmpUy;
 	};
 
 	template <typename R, int P>

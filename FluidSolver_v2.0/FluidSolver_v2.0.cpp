@@ -93,13 +93,16 @@ static void onMouse(int button, int s, int x, int y) {
 		if (button == GLUT_LEFT_BUTTON && s == GLUT_DOWN) {
 			const int pickID = Visualization::IntersectColorPick(&control, Simulation::Number(), x, y);
 			if (pickID == 0x00FFFFFF) return;
-			const Parameters::DataType* px = (Parameters::DataType*)Simulation::PositionX();
-			const Parameters::DataType* py = (Parameters::DataType*)Simulation::PositionY();
-			const Parameters::DataType* div = (Parameters::DataType*)Simulation::Divergence();
-			const Parameters::DataType* pres = (Parameters::DataType*)Simulation::Pressure();
+			const Parameters::DataType* const px = (Parameters::DataType*)Simulation::PositionX();
+			const Parameters::DataType* const py = (Parameters::DataType*)Simulation::PositionY();
+			const Parameters::DataType* const div = (Parameters::DataType*)Simulation::Divergence();
+			const Parameters::DataType* const pres = (Parameters::DataType*)Simulation::Pressure();
+			const Parameters::DataType* const ux = (Parameters::DataType*)Simulation::VelocityX();
+			const Parameters::DataType* const uy = (Parameters::DataType*)Simulation::VelocityY();
 			std::cout << " --------------------------------------------------------------------- " << std::endl;
 			std::cout << " Particle ID : " << pickID << std::endl;
 			std::cout << " Coordinate (x,y) : " << px[pickID] << ", " << py[pickID] << std::endl;
+			std::cout << " Velocity (x,y) : " << ux[pickID] << ", " << uy[pickID] << std::endl;
 			std::cout << " Divergence : " << div[pickID] << "    " << " Pressure : " << pres[pickID] << std::endl;
 			std::cout << " --------------------------------------------------------------------- " << std::endl;
 		}

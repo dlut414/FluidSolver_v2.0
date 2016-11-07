@@ -33,7 +33,7 @@ void main() {
 	fS2 = vS2;
 
 	gl_Position = fPos;
-	gl_PointSize = 1.0f;// +scal / 5.e10;
+	gl_PointSize = 2.0f;// +scal / 5.e10;
 }
 
 );
@@ -65,7 +65,7 @@ void main() {
 	fS2 = vS2;
 
 	gl_Position = fPos;
-	gl_PointSize = 1.0f;
+	gl_PointSize = 2.0f;
 }
 
 );
