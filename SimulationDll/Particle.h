@@ -59,6 +59,7 @@ namespace SIM {
 			t_dirichlet.clear();
 			p_neumann.clear();
 			t_neumann.clear();
+			np = 0;
 		}
 		void operator >> (const std::string str) const {
 			std::ofstream file(str, std::ofstream::out);
@@ -78,8 +79,7 @@ namespace SIM {
 			int n; int t; Vec p; Vec v; R tp; Vec norm;
 			std::ifstream file(str);
 			if (!file.is_open()) std::cout << " File Geo.in not found ! " << std::endl;
-			file >> ct >> dp >> np;
-			n = np;
+			file >> ct >> dp >> n;
 			while (n-- > 0) {
 				file >> t;
 				file >> p[0] >> p[1];
@@ -101,6 +101,12 @@ namespace SIM {
 			vel[0].push_back(v[0]); vel[1].push_back(v[1]); vel_p1[0].push_back(v[0]); vel_p1[1].push_back(v[1]); vel_m1[0].push_back(v[0]); vel_m1[1].push_back(v[1]);
 			temp.push_back(tp); temp_m1.push_back(tp); pres.push_back(R(0)); phi.push_back(R(0)); vort.push_back(R(0)); div.push_back(R(0));
 			bdc.push_back(0);
+			bdnorm.push_back(Vec());
+			p_dirichlet.push_back(0);
+			t_dirichlet.push_back(0);
+			p_neumann.push_back(0);
+			t_neumann.push_back(0);
+			np++;
 		}
 		void addPart(const pType& t, const Vec& p, const Vec& v, const R& tp, const Vec& norm) {
 			type.push_back(t);
@@ -108,7 +114,25 @@ namespace SIM {
 			vel[0].push_back(v[0]); vel[1].push_back(v[1]); vel_p1[0].push_back(v[0]); vel_p1[1].push_back(v[1]); vel_m1[0].push_back(v[0]); vel_m1[1].push_back(v[1]);
 			temp.push_back(tp); temp_m1.push_back(tp); pres.push_back(R(0)); phi.push_back(R(0)); vort.push_back(R(0)); div.push_back(R(0));
 			bdc.push_back(0);
-			bdnorm[int(type.size() - 1)] = norm;
+			bdnorm.push_back(norm);
+			p_dirichlet.push_back(0);
+			t_dirichlet.push_back(0);
+			p_neumann.push_back(0);
+			t_neumann.push_back(0);
+			np++;
+		}
+		void erasePart(const int& offset) {
+			type.erase(type.begin() + offset);
+			pos[0].erase(pos[0].begin() + offset); pos[1].erase(pos[1].begin() + offset); pos_m1[0].erase(pos_m1[0].begin() + offset); pos_m1[1].erase(pos_m1[1].begin() + offset);
+			vel[0].erase(vel[0].begin() + offset); vel[1].erase(vel[1].begin() + offset); vel_p1[0].erase(vel_p1[0].begin() + offset); vel_p1[1].erase(vel_p1[1].begin() + offset); vel_m1[0].erase(vel_m1[0].begin() + offset); vel_m1[1].erase(vel_m1[1].begin() + offset);
+			temp.erase(temp.begin() + offset); temp_m1.erase(temp_m1.begin() + offset); pres.erase(pres.begin() + offset); phi.erase(phi.begin() + offset); vort.erase(vort.begin() + offset); div.erase(div.begin() + offset);
+			bdc.erase(bdc.begin() + offset);
+			bdnorm.erase(bdnorm.begin() + offset);
+			p_dirichlet.erase(p_dirichlet.begin() + offset);
+			t_dirichlet.erase(t_dirichlet.begin() + offset);
+			p_neumann.erase(p_neumann.begin() + offset);
+			t_neumann.erase(t_neumann.begin() + offset);
+			np--;
 		}
 
 		void buildCell() {
@@ -140,16 +164,12 @@ namespace SIM {
 		}
 
 		void b2neumann() {
-			p_neumann.clear();
-			t_neumann.clear();
 			for (int p = 0; p < np; p++) {
 				if (IS(bdc[p], P_NEUMANN)) p_neumann[p] = R(0);
 				if (IS(bdc[p], T_NEUMANN)) t_neumann[p] = R(0);
 			}
 		}
 		void b2dirichlet() {
-			p_dirichlet.clear();
-			t_dirichlet.clear();
 			for (int p = 0; p < np; p++) {
 				if (IS(bdc[p], P_DIRICHLET)) p_dirichlet[p] = R(0);
 				if (IS(bdc[p], T_DIRICHLET0)) t_dirichlet[p] = R(0);
@@ -174,11 +194,11 @@ namespace SIM {
 		std::vector<int> bdc;
 		std::vector<R> phi;
 		std::vector<R> vort;
-		std::unordered_map<int, Vec> bdnorm;
-		std::unordered_map<int, R> p_dirichlet;
-		std::unordered_map<int, R> t_dirichlet;
-		std::unordered_map<int, R> p_neumann;
-		std::unordered_map<int, R> t_neumann;
+		std::vector<Vec> bdnorm;
+		std::vector<R> p_dirichlet;
+		std::vector<R> t_dirichlet;
+		std::vector<R> p_neumann;
+		std::vector<R> t_neumann;
 
 		LinkCell<R,2>* cell;
 	};

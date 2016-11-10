@@ -862,11 +862,9 @@ namespace SIM {
 		}
 
 		void init_x() {
-			invNeu.clear();
-			invMat.clear();
 			for (int p = 0; p < np; p++) {
 				invMat.push_back(MatPP());
-				if (IS(bdc[p], P_NEUMANN)) invNeu[p] = MatPP::Zero();
+				invNeu.push_back(MatPP());
 			}
 			varrho = 1. / (1.*dp);
 			Vec zero = Vec::Zero();
@@ -885,10 +883,20 @@ namespace SIM {
 			DRH::Run<1, 0>(varrho, zero.data(), pnH_px_o.data());
 			DRH::Run<0, 1>(varrho, zero.data(), pnH_py_o.data());
 		}
+		void addPart(const pType& t, const Vec& p, const Vec& v, const R& tp) {
+			Particle<R,2,Particle_x<R,2,P>>::addPart(t, p, v, tp);
+			invMat.push_back(MatPP());
+			invNeu.push_back(MatPP());
+		}
+		void erasePart(const int& offset) {
+			Particle<R,2,Particle_x<R,2,P>>::erasePart(offset);
+			invMat.erase(invMat.begin() + offset);
+			invNeu.erase(invNeu.begin() + offset);
+		}
 
 	public:
 		std::vector<MatPP> invMat;
-		std::unordered_map<int, MatPP> invNeu;
+		std::vector<MatPP> invNeu;
 
 		R varrho;
 		Eigen::Matrix<R, 1, PN::value, Eigen::RowMajor>						pn_px_o;

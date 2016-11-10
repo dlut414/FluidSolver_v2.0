@@ -8,6 +8,7 @@
 //FractionalStep_KM_A_BFSF.h
 ///defination of class FractionalStep_KM_A_BFSF (Kim & Moin)
 /// FractionalStep scheme with modified Dirichlet condition for velocity and Neumann condition for Pressure
+/// inlet/outlet B.C.: velocity -> Dirichlet condition    pressure -> homogeneous Neumann condition
 #pragma once
 #include "Simulator.h"
 #include "Particle_x.h"
@@ -45,30 +46,10 @@ namespace SIM {
 			part->init_x();
 			sen = new Sensor<R,2,Particle_x<R,2,P>>(part);
 			*sen << "Sensor.in";
-
-			TmpUx.resize(part->np);
-			TmpUy.resize(part->np);
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				TmpUx[p] = part->vel[0][p];
-				TmpUy[p] = part->vel[1][p];
-			}
 		}
 
 		void step() {
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == INLET) {
-					part->vel[0][p] = TmpUx[p] * (1 - exp(-part->ct));
-					part->vel[1][p] = TmpUy[p] * (1 - exp(-part->ct));
-				}
-			}
 			calInvMat();
-
 			visTerm_i_q1r0();
 			presTerm_i_q1();
 
@@ -82,6 +63,7 @@ namespace SIM {
 			check();
 
 			//Redistribute();
+			InletOutletPart();
 
 			sync();
 		}
@@ -245,7 +227,7 @@ namespace SIM {
 		void makeLhs_p() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD1 || part->type[p] == BD2 || part->type[p] == INLET || part->type[p] == OUTLET) {
+				if (part->type[p] == BD2) {
 					coef.push_back(Tpl(p, p, R(1)));
 					continue;
 				}
@@ -408,6 +390,59 @@ namespace SIM {
 			}
 		}
 
+		void InletOutletPart() {
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] == INLET || part->type[p] == OUTLET) {
+					part->pos[0][p] = part->pos_m1[0][p];
+					part->pos[1][p] = part->pos_m1[1][p];
+				}
+			}
+			for (int p = 0; p < part->np; p++) {
+				int nearP_id = part->np;
+				R nearP_dis = std::numeric_limits<R>::max();
+				if (part->type[p] == INLET || part->type[p] == OUTLET) {
+					const auto& cell = part->cell;
+					const int cx = cell->pos2cell(part->pos[0][p]);
+					const int cy = cell->pos2cell(part->pos[1][p]);
+					for (int i = 0; i < cell->blockSize::value; i++) {
+						const int key = cell->hash(cx, cy, i);
+						for (int m = 0; m < cell->linkList[key].size(); m++) {
+							const int q = cell->linkList[key][m];
+							if (q != p && part->type[q] == FLUID) {
+								const R dr[2] = { part->pos[0][q] - part->pos[0][p], part->pos[1][q] - part->pos[1][p] };
+								const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+								if (dr1 <= nearP_dis) {
+									nearP_dis = dr1;
+									nearP_id = q;
+								}
+							}
+						}
+					}
+					if (part->type[p] == INLET) {
+						if (nearP_dis >= 1.5* part->dp && nearP_dis < 2* part->dp) {
+							Vec pos_q, vel_q;
+							R tp_q;
+							pos_q[0] = 0.5* (part->pos[0][p] + part->pos[0][nearP_id]);
+							pos_q[1] = 0.5* (part->pos[1][p] + part->pos[1][nearP_id]);
+							vel_q[0] = 0.5* (part->vel[0][p] + part->vel[0][nearP_id]);
+							vel_q[1] = 0.5* (part->vel[1][p] + part->vel[1][nearP_id]);
+							tp_q = 0.5* (part->temp[p] + part->temp[nearP_id]);
+							part->addPart(FLUID, pos_q, vel_q, tp_q);
+						}
+					}
+					else if (part->type[p] == OUTLET) {
+						if (nearP_dis <= 0.5* part->dp) {
+							part->erasePart(nearP_id);
+						}
+					}
+				}
+			}
+			mSol->resize(part->np);
+		}
+
 		template <int LOOP = 3>
 		void SpringULSIModel() {
 			std::vector<R> Dposx(part->np, R(0));
@@ -487,8 +522,6 @@ namespace SIM {
 	private:
 		Shifter<R,2> shi;
 		std::vector<Tpl> coef;
-		std::vector<R> TmpUx;
-		std::vector<R> TmpUy;
 	};
 
 	template <typename R, int P>

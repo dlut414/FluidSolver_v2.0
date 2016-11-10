@@ -22,15 +22,18 @@ namespace SIM {
 		typedef Eigen::IncompleteLUT<R> preconditionerILU;
 		typedef Eigen::DiagonalPreconditioner<R> preconditionerDia;
 	public:
-		MatSolver(const int& _n, const R& e)
-			: n(_n), Dn(D*_n), eps(e), 
-			a(_n + AG, _n + AG), x(_n + AG), b(_n + AG), 
-			au(D*_n, D*_n), u(D*_n), rhs(D*_n), 
-			vr(_n+AG), vr_hat(_n+AG), vv(_n+AG), vp(_n+AG), vt(_n+AG), vh(_n+AG), vs(_n+AG),
-			Dvr(D*_n), Dvr_hat(D*_n), Dvv(D*_n), Dvp(D*_n), Dvt(D*_n), Dvh(D*_n), Dvs(D*_n) {
+		MatSolver(const int& _n, const R& e) : n(_n), Dn(D*_n), eps(e) {
 			init();
 		}
 		~MatSolver() {}
+
+		void resize(const int& nsize) {
+			n = nsize, Dn = D* nsize;
+			a.resize(n + AG, n + AG), x.resize(n + AG), b.resize(n + AG);
+			au.resize(D*n, D*n), u.resize(D*n), rhs.resize(D*n);
+			vr.resize(n + AG), vr_hat.resize(n + AG), vv.resize(n + AG), vp.resize(n + AG), vt.resize(n + AG), vh.resize(n + AG), vs.resize(n + AG);
+			Dvr.resize(D*n), Dvr_hat.resize(D*n), Dvv.resize(D*n), Dvp.resize(D*n), Dvt.resize(D*n), Dvh.resize(D*n), Dvs.resize(D*n);
+		}
 
 		void biCg() {
 			solverBiCgDia.compute(a);
@@ -396,13 +399,17 @@ namespace SIM {
 
 	private:
 		void init() {
-			maxIter = 1000;
+			a.resize(n + AG, n + AG), x.resize(n + AG), b.resize(n + AG);
+			au.resize(D*n, D*n), u.resize(D*n), rhs.resize(D*n);
+			vr.resize(n + AG), vr_hat.resize(n + AG), vv.resize(n + AG), vp.resize(n + AG), vt.resize(n + AG), vh.resize(n + AG), vs.resize(n + AG);
+			Dvr.resize(D*n), Dvr_hat.resize(D*n), Dvv.resize(D*n), Dvp.resize(D*n), Dvt.resize(D*n), Dvh.resize(D*n), Dvs.resize(D*n);
 			for (int i = 0; i < n; i++) {
 				x[i] = b[i] = R(0.0);
 			}
 			for (int i = 0; i < D*n; i++) {
 				u[i] = rhs[i] = (0.0);
 			}
+			maxIter = 1000;
 			solverBiCgILU.preconditioner().setDroptol(eps);
 			solverBiCgILU.preconditioner().setFillfactor(1);
 			solverBiCgILU.setMaxIterations(maxIter);
