@@ -111,6 +111,24 @@ namespace SIM {
 					part->vel_p1[1][p] = part->vel[1][p];
 				}
 			}
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] == OUTLET) {
+					int q = part->NearestFluid(p);
+					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
+					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
+					const Vec norm = part->bdnorm.at(p);
+					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
+					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
+					Vec Dqp;
+					Dqp[0] = part->pos[0][p] - part->pos[0][q];
+					Dqp[1] = part->pos[1][p] - part->pos[1][q];
+					part->vel_p1[0][p] = part->vel_p1[0][q] + gradX_p.dot(Dqp);
+					part->vel_p1[1][p] = part->vel_p1[1][q] + gradY_p.dot(Dqp);
+				}
+			}
 		}
 		
 		void updatePosition_s1() {
@@ -286,16 +304,22 @@ namespace SIM {
 				const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p);
 				mSol->b[p] = coef_local * div_local;
 				if (IS(part->bdc[p], P_NEUMANN)) {
-					Vec& normal = part->bdnorm.at(p);
-					VecP inner = VecP::Zero();
-					inner.block<2, 1>(0, 0) = normal;
-					const Vec lap_ustar_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
-					const R neumannX = para.Pr* lap_ustar_local[0];
-					const R neumannY = para.Pr* lap_ustar_local[1];
-					const R neumann = neumannX* normal[0] + neumannY* normal[1];
-					const VecP aa = part->invNeu.at(p)* inner;
-					const R cst = neumann *part->ww(R(0))* (R(1) / part->varrho) * (part->pn_lap_o.dot(aa));
-					mSol->b[p] -= cst;
+					if (part->type[p] == BD1) {
+						Vec& normal = part->bdnorm.at(p);
+						VecP inner = VecP::Zero();
+						inner.block<2, 1>(0, 0) = normal;
+						//const Vec lap_ustar_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
+						//const R neumannX = para.Pr* lap_ustar_local[0];
+						//const R neumannY = para.Pr* lap_ustar_local[1];
+						//const R neumann = neumannX* normal[0] + neumannY* normal[1];
+						const R neumann = (normal[0] * part->vel_p1[0][p] + normal[1] * part->vel_p1[1][p]) / para.dt;
+						const VecP aa = part->invNeu.at(p)* inner;
+						const R cst = neumann *part->ww(R(0))* (R(1) / part->varrho) * (part->pn_lap_o.dot(aa));
+						mSol->b[p] -= cst;
+					}
+					else if (part->type[p] == INLET || part->type[p] == OUTLET) {
+
+					}
 				}
 			}
 		}

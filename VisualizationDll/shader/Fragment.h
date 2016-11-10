@@ -48,10 +48,10 @@ void paintRGB() {
 	else if (fType == 3) {
 		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	}
-	else if (fType == 4) {
-		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
-	}
-	else if(fType == 0) {
+	//else if (fType == 4) {
+	//	color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	//}
+	else if(fType == 0 || fType == 4) {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -73,10 +73,10 @@ void paintRB() {
 	else if (fType == 3) {
 		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	}
-	else if (fType == 4) {
-		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
-	}
-	else if (fType == 0) {
+	//else if (fType == 4) {
+	//	color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	//}
+	else if (fType == 0 || fType == 4) {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)
@@ -132,10 +132,10 @@ void paintRGB() {
 	else if (fType == 3) {
 		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	}
-	else if (fType == 4) {
-		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
-	}
-	else if (fType == 0) {
+	//else if (fType == 4) {
+	//	color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	//}
+	else if (fType == 0 || fType == 4) {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -157,10 +157,10 @@ void paintRB() {
 	else if (fType == 3) {
 		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	}
-	else if (fType == 4) {
-		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
-	}
-	else if (fType == 0) {
+	//else if (fType == 4) {
+	//	color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	//}
+	else if (fType == 0 || fType == 4) {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)
