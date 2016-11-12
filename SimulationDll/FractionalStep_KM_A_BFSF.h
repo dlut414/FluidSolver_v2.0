@@ -62,7 +62,7 @@ namespace SIM {
 			calForVis();
 			check();
 
-			Redistribute();
+			//Redistribute();
 			InletOutletPart();
 
 			sync();
@@ -409,7 +409,7 @@ namespace SIM {
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != INLET) {
+				if (part->type[p] != INLET && part->type[p] != OUTLET) {
 					part->pos_m1[0][p] = part->pos[0][p];
 					part->pos_m1[1][p] = part->pos[1][p];
 				}
@@ -417,76 +417,98 @@ namespace SIM {
 		}
 
 		void InletOutletPart() {
+//@ concept 2
+			std::vector<int> inId;
+			std::vector<int> outId;
 			const R dp2 = part->dp* part->dp;
-#if OMP
-#pragma omp parallel for
-#endif
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == INLET) {
 					const R dr[2] = { part->pos[0][p] - part->pos_m1[0][p], part->pos[1][p] - part->pos_m1[1][p] };
 					const R dr2 = dr[0] * dr[0] + dr[1] * dr[1];
 					if (dr2 > dp2) {
-						Vec pos, vel;
-						pos[0] = part->pos[0][p];
-						pos[1] = part->pos[1][p];
-						vel[0] = part->vel_p1[0][p];
-						vel[1] = part->vel_p1[1][p];
-						part->addPart(FLUID, pos, vel, 0);
-						part->pos[0][p] = part->pos_m1[0][p];
-						part->pos[1][p] = part->pos_m1[1][p];
+						inId.push_back(p);
 					}
 				}
 				else if (part->type[p] == OUTLET) {
+					const R dr[2] = { part->pos[0][p] - part->pos_m1[0][p], part->pos[1][p] - part->pos_m1[1][p] };
+					const R dr2 = dr[0] * dr[0] + dr[1] * dr[1];
+					if (dr2 > dp2) {
+						outId.push_back(p);
+					}
+				}
+			}
+			for (auto it = 0; it < inId.size(); it++) {
+				const int id = inId[it];
+				Vec pos, vel;
+				pos[0] = part->pos[0][id];
+				pos[1] = part->pos[1][id];
+				vel[0] = part->vel_p1[0][id];
+				vel[1] = part->vel_p1[1][id];
+				part->addPart(FLUID, pos, vel, 0);
+				part->pos[0][id] = part->pos_m1[0][id];
+				part->pos[1][id] = part->pos_m1[1][id];
+			}
+			std::sort(outId.begin(), outId.end());
+			for (int it = int(outId.size() - 1); it >= 0; it--) {
+				const int id = outId[it];
+				int q = part->NearestFluid(id);
+				part->type[q] = OUTLET;
+				part->pos_m1[0][q] = part->pos_m1[0][id];
+				part->pos_m1[1][q] = part->pos_m1[1][id];
+			}
+			for (int it = int(outId.size() - 1); it >= 0; it--) {
+				const int id = outId[it];
+				part->erasePart(id);
+			}
 
-				}
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (/*part->type[p] == INLET || */part->type[p] == OUTLET) {
-					part->pos[0][p] = part->pos_m1[0][p];
-					part->pos[1][p] = part->pos_m1[1][p];
-				}
-			}
-			for (int p = 0; p < part->np; p++) {
-				int nearP_id = part->np;
-				R nearP_dis = std::numeric_limits<R>::max();
-				if (part->type[p] == INLET || part->type[p] == OUTLET) {
-					const auto& cell = part->cell;
-					const int cx = cell->pos2cell(part->pos[0][p]);
-					const int cy = cell->pos2cell(part->pos[1][p]);
-					for (int i = 0; i < cell->blockSize::value; i++) {
-						const int key = cell->hash(cx, cy, i);
-						for (int m = 0; m < cell->linkList[key].size(); m++) {
-							const int q = cell->linkList[key][m];
-							if (q != p && part->type[q] == FLUID) {
-								const R dr[2] = { part->pos[0][q] - part->pos[0][p], part->pos[1][q] - part->pos[1][p] };
-								const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-								if (dr1 <= nearP_dis) {
-									nearP_dis = dr1;
-									nearP_id = q;
-								}
-							}
-						}
-					}
-					//if (part->type[p] == INLET) {
-					//	if (nearP_dis >= 1.5* part->dp && nearP_dis < 2* part->dp) {
-					//		Vec pos_q, vel_q;
-					//		pos_q[0] = 0.5* (part->pos[0][p] + part->pos[0][nearP_id]);
-					//		pos_q[1] = 0.5* (part->pos[1][p] + part->pos[1][nearP_id]);
-					//		vel_q[0] = 0.5* (part->vel[0][p] + part->vel[0][nearP_id]);
-					//		vel_q[1] = 0.5* (part->vel[1][p] + part->vel[1][nearP_id]);
-					//		part->addPart(FLUID, pos_q, vel_q, 0);
-					//	}
-					//}
-					if (part->type[p] == OUTLET) {
-						if (nearP_dis <= 0.5* part->dp) {
-							part->erasePart(nearP_id);
-						}
-					}
-				}
-			}
+//@ concept 1
+//#if OMP
+//#pragma omp parallel for
+//#endif
+//			for (int p = 0; p < part->np; p++) {
+//				if (/*part->type[p] == INLET || */part->type[p] == OUTLET) {
+//					part->pos[0][p] = part->pos_m1[0][p];
+//					part->pos[1][p] = part->pos_m1[1][p];
+//				}
+//			}
+//			for (int p = 0; p < part->np; p++) {
+//				int nearP_id = part->np;
+//				R nearP_dis = std::numeric_limits<R>::max();
+//				if (part->type[p] == INLET || part->type[p] == OUTLET) {
+//					const auto& cell = part->cell;
+//					const int cx = cell->pos2cell(part->pos[0][p]);
+//					const int cy = cell->pos2cell(part->pos[1][p]);
+//					for (int i = 0; i < cell->blockSize::value; i++) {
+//						const int key = cell->hash(cx, cy, i);
+//						for (int m = 0; m < cell->linkList[key].size(); m++) {
+//							const int q = cell->linkList[key][m];
+//							if (q != p && part->type[q] == FLUID) {
+//								const R dr[2] = { part->pos[0][q] - part->pos[0][p], part->pos[1][q] - part->pos[1][p] };
+//								const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+//								if (dr1 <= nearP_dis) {
+//									nearP_dis = dr1;
+//									nearP_id = q;
+//								}
+//							}
+//						}
+//					}
+//					//if (part->type[p] == INLET) {
+//					//	if (nearP_dis >= 1.5* part->dp && nearP_dis < 2* part->dp) {
+//					//		Vec pos_q, vel_q;
+//					//		pos_q[0] = 0.5* (part->pos[0][p] + part->pos[0][nearP_id]);
+//					//		pos_q[1] = 0.5* (part->pos[1][p] + part->pos[1][nearP_id]);
+//					//		vel_q[0] = 0.5* (part->vel[0][p] + part->vel[0][nearP_id]);
+//					//		vel_q[1] = 0.5* (part->vel[1][p] + part->vel[1][nearP_id]);
+//					//		part->addPart(FLUID, pos_q, vel_q, 0);
+//					//	}
+//					//}
+//					if (part->type[p] == OUTLET) {
+//						if (nearP_dis <= 0.4* part->dp) {
+//							part->erasePart(nearP_id);
+//						}
+//					}
+//				}
+//			}
 			mSol->resize(part->np);
 		}
 
