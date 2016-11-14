@@ -134,6 +134,49 @@ namespace SIM {
 			t_neumann.erase(t_neumann.begin() + offset);
 			np--;
 		}
+		void swapPart(const int& p, const int& q) {
+			int t = type[p]; type[p] = type[q], type[q] = t;
+			R posx = pos[0][p]; pos[0][p] = pos[0][q], pos[0][q] = posx;
+			R posy = pos[1][p]; pos[1][p] = pos[1][q], pos[1][q] = posy;
+			R posx_m1 = pos_m1[0][p]; pos_m1[0][p] = pos_m1[0][q], pos_m1[0][q] = posx_m1;
+			R posy_m1 = pos_m1[1][p]; pos_m1[1][p] = pos_m1[1][q], pos_m1[1][q] = posy_m1;
+			R velx = vel[0][p]; vel[0][p] = vel[0][q], vel[0][q] = velx;
+			R vely = vel[1][p]; vel[1][p] = vel[1][q], vel[1][q] = vely;
+			R velx_p1 = vel_p1[0][p]; vel_p1[0][p] = vel_p1[0][q], vel_p1[0][q] = velx_p1;
+			R vely_p1 = vel_p1[1][p]; vel_p1[1][p] = vel_p1[1][q], vel_p1[1][q] = vely_p1;
+			R velx_m1 = vel_m1[0][p]; vel_m1[0][p] = vel_m1[0][q], vel_m1[0][q] = velx_m1;
+			R vely_m1 = vel_m1[1][p]; vel_m1[1][p] = vel_m1[1][q], vel_m1[1][q] = vely_m1;
+			R tmp = temp[p]; temp[p] = temp[q], temp[q] = tmp;
+			R tmp_m1 = temp_m1[p]; temp_m1[p] = temp_m1[q], temp_m1[q] = tmp_m1;
+			R ps = pres[p]; pres[p] = pres[q], pres[q] = ps;
+			R ph = phi[p]; phi[p] = phi[q], phi[q] = ph;
+			R vt = vort[p]; vort[p] = vort[q], vort[q] = vt;
+			R dv = div[p]; div[p] = div[q], div[q] = dv;
+			int bc = bdc[p]; bdc[p] = bdc[q], bdc[q] = bc;
+			Vec bm = bdnorm[p]; bdnorm[p] = bdnorm[q], bdnorm[q] = bm;
+			R pd = p_dirichlet[p]; p_dirichlet[p] = p_dirichlet[q], p_dirichlet[q] = pd;
+			R td = t_dirichlet[p]; t_dirichlet[p] = t_dirichlet[q], t_dirichlet[q] = td;
+			R pn = p_neumann[p]; p_neumann[p] = p_neumann[q], p_neumann[q] = pn;
+			R tn = t_neumann[p]; t_neumann[p] = t_neumann[q], t_neumann[q] = tn;
+		}
+		void copyPart_phisicalValue(const int& p, const int& q) {
+			pos[0][p] = pos[0][q];
+			pos[1][p] = pos[1][q];
+			pos_m1[0][p] = pos_m1[0][q];
+			pos_m1[1][p] = pos_m1[1][q];
+			vel[0][p] = vel[0][q];
+			vel[1][p] = vel[1][q];
+			vel_p1[0][p] = vel_p1[0][q];
+			vel_p1[1][p] = vel_p1[1][q];
+			vel_m1[0][p] = vel_m1[0][q];
+			vel_m1[1][p] = vel_m1[1][q];
+			temp[p] = temp[q];
+			temp_m1[p] = temp_m1[q];
+			pres[p] = pres[q];
+			phi[p] = phi[q];
+			vort[p] = vort[q];
+			div[p] = div[q];
+		}
 
 		void buildCell() {
 			BBox<R> b = BBox<R>();

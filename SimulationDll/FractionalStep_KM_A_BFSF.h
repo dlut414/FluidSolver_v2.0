@@ -420,6 +420,7 @@ namespace SIM {
 //@ concept 2
 			std::vector<int> inId;
 			std::vector<int> outId;
+			std::vector<int> rmId;
 			const R dp2 = part->dp* part->dp;
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == INLET) {
@@ -448,16 +449,15 @@ namespace SIM {
 				part->pos[0][id] = part->pos_m1[0][id];
 				part->pos[1][id] = part->pos_m1[1][id];
 			}
-			std::sort(outId.begin(), outId.end());
-			for (int it = int(outId.size() - 1); it >= 0; it--) {
+			for (auto it = 0; it < outId.size(); it++) {
 				const int id = outId[it];
 				int q = part->NearestFluid(id);
-				part->type[q] = OUTLET;
-				part->pos_m1[0][q] = part->pos_m1[0][id];
-				part->pos_m1[1][q] = part->pos_m1[1][id];
+				part->copyPart_phisicalValue(id, q);
+				rmId.push_back(q);
 			}
-			for (int it = int(outId.size() - 1); it >= 0; it--) {
-				const int id = outId[it];
+			std::sort(rmId.begin(), rmId.end());
+			for (int it = int(rmId.size())-1; it >= 0; it--) {
+				const int id = rmId[it];
 				part->erasePart(id);
 			}
 
