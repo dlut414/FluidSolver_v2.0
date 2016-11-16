@@ -641,7 +641,7 @@ namespace SIM {
 					}
 				}
 			}
-			if (dis_min > 0.5* part->dp) return;
+			if (dis_min > 0.8* part->dp) return;
 			std::cout << " Redistribute " << std::endl;
 #if OMP
 #pragma omp parallel for

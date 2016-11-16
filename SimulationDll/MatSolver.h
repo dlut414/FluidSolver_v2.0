@@ -241,7 +241,7 @@ namespace SIM {
 			std::cout << " iterations ----------> " << solverBiCgDia.iterations() << std::endl;
 			std::cout << " error ---------------> " << solverBiCgDia.error() << std::endl;
 		}
-		void ccBiCg_augment(const std::vector<enum pType>& type) {
+		void ccBiCg_augment(const std::vector<int>& type) {
 			sMat d(n + AG, n + AG);
 			std::vector<Tpl> coef;
 			for (int p = 0; p<n; p++) {

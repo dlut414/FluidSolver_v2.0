@@ -41,7 +41,7 @@ namespace SIM {
 		__forceinline void poly(const R* in, R* out) const { PN::Run(varrho, in, out); }
 		__forceinline void polyH(const R* in, R* out) const { PNH::Run(varrho, in, out); }
 
-		const R DerX(const R* const phi, const int& p) const {
+		const R DerX(const R* const phi, const int& p, const int& mask = ALLONE) const {
 			VecP vv = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
 			const int cy = cell->pos2cell(pos[1][p]);
@@ -49,21 +49,22 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			const VecP aa = invMat[p] * vv;
 			return (pn_px_o * aa);
 		}
 
-		const R DerY(const R* const phi, const int& p) const {
+		const R DerY(const R* const phi, const int& p, const int& mask = ALLONE) const {
 			VecP vv = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
 			const int cy = cell->pos2cell(pos[1][p]);
@@ -71,21 +72,22 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			const VecP aa = invMat[p] * vv;
 			return (pn_py_o * aa);
 		}
 
-		const R DerXX(const R* const phi, const int& p) const {
+		const R DerXX(const R* const phi, const int& p, const int& mask = ALLONE) const {
 			VecP vv = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
 			const int cy = cell->pos2cell(pos[1][p]);
@@ -93,21 +95,22 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			const VecP aa = invMat[p] * vv;
 			return (pn_pxx_o * aa);
 		}
 
-		const R DerYY(const R* const phi, const int& p) const {
+		const R DerYY(const R* const phi, const int& p, const int& mask = ALLONE) const {
 			VecP vv = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
 			const int cy = cell->pos2cell(pos[1][p]);
@@ -115,21 +118,22 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			const VecP aa = invMat[p] * vv;
 			return (pn_pyy_o * aa);
 		}
 
-		const Vec Grad(const R* const phi, const int& p) const {
+		const Vec Grad(const R* const phi, const int& p, const int& mask = ALLONE) const {
 			VecP vv = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
 			const int cy = cell->pos2cell(pos[1][p]);
@@ -137,21 +141,22 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			const VecP aa = invMat[p] * vv;
 			return (pn_p_o * aa);
 		}
 
-		const R Div(const R* const phix, const R* const phiy, const int& p) const {
+		const R Div(const R* const phix, const R* const phiy, const int& p, const int& mask = ALLONE) const {
 			VecP vvx = VecP::Zero();
 			VecP vvy = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
@@ -160,15 +165,16 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vvx += w * (phix[q] - phix[p]) * npq;
-					vvy += w * (phiy[q] - phiy[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vvx += w * (phix[q] - phix[p]) * npq;
+						vvy += w * (phiy[q] - phiy[p]) * npq;
+					}
 				}
 			}
 			const R pupx = pn_px_o* invMat[p] * vvx;
@@ -176,7 +182,7 @@ namespace SIM {
 			return pupx + pvpy;
 		}
 
-		const R Lap(const R* const phi, const int& p) const {
+		const R Lap(const R* const phi, const int& p, const int& mask = ALLONE) const {
 			VecP vv = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
 			const int cy = cell->pos2cell(pos[1][p]);
@@ -184,21 +190,22 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			const VecP aa = invMat[p] * vv;
 			return (pn_lap_o * aa);
 		}
 
-		const Vec Lap(const R* const phix, const R* const phiy, const int& p) const {
+		const Vec Lap(const R* const phix, const R* const phiy, const int& p, const int& mask = ALLONE) const {
 			VecP vvx = VecP::Zero();
 			VecP vvy = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
@@ -207,15 +214,16 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vvx += w * (phix[q] - phix[p]) * npq;
-					vvy += w * (phiy[q] - phiy[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vvx += w * (phix[q] - phix[p]) * npq;
+						vvy += w * (phiy[q] - phiy[p]) * npq;
+					}
 				}
 			}
 			const VecP aax = invMat[p] * vvx;
@@ -226,7 +234,7 @@ namespace SIM {
 			return ret;
 		}
 
-		const R Rot(const R* const phix, const R* const phiy, const int& p) const {
+		const R Rot(const R* const phix, const R* const phiy, const int& p, const int& mask = ALLONE) const {
 			VecP vvx = VecP::Zero();
 			VecP vvy = VecP::Zero();
 			const int cx = cell->pos2cell(pos[0][p]);
@@ -235,15 +243,16 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					vvx += w * (phix[q] - phix[p]) * npq;
-					vvy += w * (phiy[q] - phiy[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vvx += w * (phix[q] - phix[p]) * npq;
+						vvy += w * (phiy[q] - phiy[p]) * npq;
+					}
 				}
 			}
 			const R pupy = pn_py_o* invMat[p] * vvx;
@@ -251,7 +260,7 @@ namespace SIM {
 			return (pupy - pvpx);
 		}
 
-		const R interpolateLSA(const R* const phi, const R& px, const R& py) const {
+		const R interpolateLSA(const R* const phi, const R& px, const R& py, const int& mask = ALLONE) const {
 			int p = -1;
 			R dis2 = std::numeric_limits<R>::max();
 			const int cx = cell->pos2cell(px);
@@ -260,14 +269,15 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - px, pos[1][q] - py };
-					const R dr2 = (dr[0] * dr[0] + dr[1] * dr[1]);
-					const R dr1 = sqrt(dr2);
-					if (dr1 > r0) continue;
-					if (dr2 < dis2) {
-						dis2 = dr2;
-						p = q;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - px, pos[1][q] - py };
+						const R dr2 = (dr[0] * dr[0] + dr[1] * dr[1]);
+						const R dr1 = sqrt(dr2);
+						if (dr1 > r0) continue;
+						if (dr2 < dis2) {
+							dis2 = dr2;
+							p = q;
+						}
 					}
 				}
 			}
@@ -275,7 +285,7 @@ namespace SIM {
 			return interpolateLSA(phi, p, px, py);
 		}
 
-		const Vec interpolateLSA(const R* const phix, const R* const phiy, const R& px, const R& py) const {
+		const Vec interpolateLSA(const R* const phix, const R* const phiy, const R& px, const R& py, const int& mask = ALLONE) const {
 			int p = -1;
 			R dis2 = std::numeric_limits<R>::max();
 			const int cx = cell->pos2cell(px);
@@ -284,14 +294,15 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - px, pos[1][q] - py };
-					const R dr2 = (dr[0] * dr[0] + dr[1] * dr[1]);
-					const R dr1 = sqrt(dr2);
-					if (dr1 > r0) continue;
-					if (dr2 < dis2) {
-						dis2 = dr2;
-						p = q;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - px, pos[1][q] - py };
+						const R dr2 = (dr[0] * dr[0] + dr[1] * dr[1]);
+						const R dr1 = sqrt(dr2);
+						if (dr1 > r0) continue;
+						if (dr2 < dis2) {
+							dis2 = dr2;
+							p = q;
+						}
 					}
 				}
 			}
@@ -299,7 +310,7 @@ namespace SIM {
 			return interpolateLSA(phix, phiy, p, px, py);
 		}
 
-		const R interpolateLSA(const R* const phi, const int& p, const R& px, const R& py) const {
+		const R interpolateLSA(const R* const phi, const int& p, const R& px, const R& py, const int& mask = ALLONE) const {
 			const R dx = px - pos[0][p];
 			const R dy = py - pos[1][p];
 			MatPP mm = MatPP::Zero();
@@ -310,15 +321,16 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					mm += (w * npq) * npq.transpose();
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						mm += (w * npq) * npq.transpose();
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			MatPP inv = MatPP::Zero();
@@ -343,7 +355,7 @@ namespace SIM {
 			return phi[p] + (dx*Px + dy*Py) + 0.5* (dx*dx*Pxx + R(2)*dx*dy*Pxy + dy*dy*Pyy);
 		}
 
-		const Vec interpolateLSA(const R* const phix, const R* const phiy, const int& p, const R& px, const R& py) const {
+		const Vec interpolateLSA(const R* const phix, const R* const phiy, const int& p, const R& px, const R& py, const int& mask = ALLONE) const {
 			const R dx = px - pos[0][p];
 			const R dy = py - pos[1][p];
 			MatPP mm = MatPP::Zero();
@@ -355,16 +367,17 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					mm += (w * npq) * npq.transpose();
-					vvx += w * (phix[q] - phix[p]) * npq;
-					vvy += w * (phiy[q] - phiy[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						mm += (w * npq) * npq.transpose();
+						vvx += w * (phix[q] - phix[p]) * npq;
+						vvy += w * (phiy[q] - phiy[p]) * npq;
+					}
 				}
 			}
 			MatPP inv = MatPP::Zero();
@@ -396,7 +409,7 @@ namespace SIM {
 			return ret;
 		}
 
-		const R interpolateLSAU(const R* const phi, const int& p, const R& px, const R& py) const {
+		const R interpolateLSAU(const R* const phi, const int& p, const R& px, const R& py, const int& mask = ALLONE) const {
 			const R dx = px - pos[0][p];
 			const R dy = py - pos[1][p];
 			MatPP mm = MatPP::Zero();
@@ -407,15 +420,16 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0 || (dx*dr[0] + dy*dr[1]) < R(0)) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					mm += (w * npq) * npq.transpose();
-					vv += w * (phi[q] - phi[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0 || (dx*dr[0] + dy*dr[1]) < R(0)) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						mm += (w * npq) * npq.transpose();
+						vv += w * (phi[q] - phi[p]) * npq;
+					}
 				}
 			}
 			MatPP inv = MatPP::Zero();
@@ -440,7 +454,7 @@ namespace SIM {
 			return phi[p] + (dx*Px + dy*Py) + 0.5* (dx*dx*Pxx + R(2)*dx*dy*Pxy + dy*dy*Pyy);
 		}
 
-		const Vec interpolateLSAU(const R* const phix, const R* const phiy, const int& p, const R& px, const R& py) const {
+		const Vec interpolateLSAU(const R* const phix, const R* const phiy, const int& p, const R& px, const R& py, const int& mask = ALLONE) const {
 			const R dx = px - pos[0][p];
 			const R dy = py - pos[1][p];
 			MatPP mm = MatPP::Zero();
@@ -452,16 +466,17 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0 || (dx*dr[0] + dy*dr[1]) < R(0)) continue;
-					const R w = ww(dr1);
-					VecP npq;
-					poly(dr, npq.data());
-					mm += (w * npq) * npq.transpose();
-					vvx += w * (phix[q] - phix[p]) * npq;
-					vvy += w * (phiy[q] - phiy[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0 || (dx*dr[0] + dy*dr[1]) < R(0)) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						mm += (w * npq) * npq.transpose();
+						vvx += w * (phix[q] - phix[p]) * npq;
+						vvy += w * (phiy[q] - phiy[p]) * npq;
+					}
 				}
 			}
 			MatPP inv = MatPP::Zero();
@@ -764,7 +779,7 @@ namespace SIM {
 			}
 		}
 
-		const R DivH(const R* const phix, const R* const phiy, const int& p) const {
+		const R DivH(const R* const phix, const R* const phiy, const int& p, const int& mask = ALLONE) const {
 			typedef Eigen::Matrix<R,PNH::value,1> VecPH;
 			typedef Eigen::Matrix<R,PNH::value,PNH::value> MatPPH;
 			MatPPH mm = MatPPH::Zero();
@@ -776,16 +791,17 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] == BD2) continue;
-					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
-					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-					if (dr1 > r0) continue;
-					const R w = ww(dr1);
-					VecPH npq;
-					polyH(dr, npq.data());
-					mm += (w* npq)* npq.transpose();
-					vvx += w * (phix[q] - phix[p]) * npq;
-					vvy += w * (phiy[q] - phiy[p]) * npq;
+					if (IS(mask, type[q])) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecPH npq;
+						polyH(dr, npq.data());
+						mm += (w* npq)* npq.transpose();
+						vvx += w * (phix[q] - phix[p]) * npq;
+						vvy += w * (phiy[q] - phiy[p]) * npq;
+					}
 				}
 			}
 			MatPPH inv = MatPPH::Zero();
@@ -866,7 +882,7 @@ namespace SIM {
 				invMat.push_back(MatPP());
 				invNeu.push_back(MatPP());
 			}
-			varrho = 1. / (1.*dp);
+			varrho = 1.0 / (1.0*dp);
 			Vec zero = Vec::Zero();
 			DR::Run<1, 0>(varrho, zero.data(), pn_px_o.data());
 			DR::Run<0, 1>(varrho, zero.data(), pn_py_o.data());
@@ -883,7 +899,7 @@ namespace SIM {
 			DRH::Run<1, 0>(varrho, zero.data(), pnH_px_o.data());
 			DRH::Run<0, 1>(varrho, zero.data(), pnH_py_o.data());
 		}
-		void addPart(const pType& t, const Vec& p, const Vec& v, const R& tp) {
+		void addPart(const int& t, const Vec& p, const Vec& v, const R& tp) {
 			Particle<R,2,Particle_x<R,2,P>>::addPart(t, p, v, tp);
 			invMat.push_back(MatPP());
 			invNeu.push_back(MatPP());

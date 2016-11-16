@@ -15,13 +15,11 @@
 #define __FILENAME__ (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #define PRINT(x) std::cout << __FILENAME__ << " @Ln " << __LINE__ << ": " << #x << " = " << x << std::endl;
 
-enum pType {
-	FLUID = 0,
-	BD1 = 1,
-	BD2 = 2,
-	INLET = 3,
-	OUTLET = 4,
-};
+#define BD2		0x00000000
+#define FLUID	0x00000001
+#define BD1		0x00000002
+#define INLET	0x00000004
+#define OUTLET	0x00000008
 
 #define V_DIRICHLET		0x00000001
 #define V_NEUMANN		0x00000002
@@ -31,6 +29,8 @@ enum pType {
 #define T_DIRICHLET1	0x00000020
 #define T_NEUMANN		0x00000040
 #define T_DIRICHLET		(T_DIRICHLET0|T_DIRICHLET1)
+
+#define ALLONE	0xFFFFFFFF
 
 #define ON(A, B)	(A|B)
 #define OFF(A, B)	(A&(~B))

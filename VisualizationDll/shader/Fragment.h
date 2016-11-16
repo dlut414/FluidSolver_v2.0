@@ -9,6 +9,12 @@
 
 const GLchar* fragment0 = GLSL(330 core,
 
+const int BD2 = 0x00000000;
+const int FLUID = 0x00000001;
+const int BD1 = 0x00000002;
+const int INLET = 0x00000004;
+const int OUTLET = 0x00000008;
+
 uniform mat4 fMvpInv;
 uniform float sRangeMax;
 uniform float sRangeMin;
@@ -42,16 +48,16 @@ void showCircle() {
 void paintRGB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = (fS1 - sRangeMin) / range;
-	if (fType == 2) {
+	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == 3) {
+	//else if (fType == INLET) {
 	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	//}
-	else if (fType == 4) {
+	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == 0 || fType == 1 || fType == 4 || fType == 3) {
+	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -67,16 +73,16 @@ void paintRGB() {
 void paintRB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = 2.0f* (fS1 - sRangeMin) / range - 1.0f;
-	if (fType == 2) {
+	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == 3) {
+	//else if (fType == INLET) {
 	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	//}
-	else if (fType == 4) {
+	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == 0 || fType == 1 || fType == 4 || fType == 3) {
+	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)
@@ -93,6 +99,12 @@ void paintRB() {
 
 const GLchar* fragment1 = GLSL(330 core,
 
+const int BD2 = 0x00000000;
+const int FLUID = 0x00000001;
+const int BD1 = 0x00000002;
+const int INLET = 0x00000004;
+const int OUTLET = 0x00000008;
+
 uniform mat4 fMvpInv;
 uniform float sRangeMax;
 uniform float sRangeMin;
@@ -126,16 +138,16 @@ void showCircle() {
 void paintRGB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = (fS1 - sRangeMin) / range;
-	if(fType == 2) {
+	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == 3) {
+	//else if (fType == INLET) {
 	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	//}
-	else if (fType == 4) {
+	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == 0 || fType == 1 || fType == 4 || fType == 3) {
+	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -151,16 +163,16 @@ void paintRGB() {
 void paintRB() {
 	float range = sRangeMax - sRangeMin;
 	float s_normalized = 2.0f* (fS1 - sRangeMin) / range - 1.0f;
-	if (fType == 2) {
+	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == 3) {
+	//else if (fType == INLET) {
 	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	//}
-	else if (fType == 4) {
+	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == 0 || fType == 1 || fType == 4 || fType == 3) {
+	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)

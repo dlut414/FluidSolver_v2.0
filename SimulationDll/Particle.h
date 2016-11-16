@@ -87,15 +87,15 @@ namespace SIM {
 				file >> tp;
 				if (t == BD1 || t == INLET || t == OUTLET) {
 					file >> norm[0] >> norm[1];
-					addPart(pType(t), p, v, tp, norm);
+					addPart(int(t), p, v, tp, norm);
 				}
-				else addPart(pType(t), p, v, tp);
+				else addPart(int(t), p, v, tp);
 			}
 			file.close();
 			std::cout << " Reading Geo.in done " << std::endl;
 		}
 
-		void addPart(const pType& t, const Vec& p, const Vec& v, const R& tp) {
+		void addPart(const int& t, const Vec& p, const Vec& v, const R& tp) {
 			type.push_back(t);
 			pos[0].push_back(p[0]);	pos[1].push_back(p[1]); pos_m1[0].push_back(p[0]); pos_m1[1].push_back(p[1]);
 			vel[0].push_back(v[0]); vel[1].push_back(v[1]); vel_p1[0].push_back(v[0]); vel_p1[1].push_back(v[1]); vel_m1[0].push_back(v[0]); vel_m1[1].push_back(v[1]);
@@ -108,7 +108,7 @@ namespace SIM {
 			t_neumann.push_back(0);
 			np++;
 		}
-		void addPart(const pType& t, const Vec& p, const Vec& v, const R& tp, const Vec& norm) {
+		void addPart(const int& t, const Vec& p, const Vec& v, const R& tp, const Vec& norm) {
 			type.push_back(t);
 			pos[0].push_back(p[0]);	pos[1].push_back(p[1]); pos_m1[0].push_back(p[0]); pos_m1[1].push_back(p[1]);
 			vel[0].push_back(v[0]); vel[1].push_back(v[1]); vel_p1[0].push_back(v[0]); vel_p1[1].push_back(v[1]); vel_m1[0].push_back(v[0]); vel_m1[1].push_back(v[1]);
@@ -233,7 +233,7 @@ namespace SIM {
 		std::vector<R> temp_m1;
 		std::vector<R> pres;
 		std::vector<R> div;
-		std::vector<pType> type;
+		std::vector<int> type;
 		std::vector<int> bdc;
 		std::vector<R> phi;
 		std::vector<R> vort;
