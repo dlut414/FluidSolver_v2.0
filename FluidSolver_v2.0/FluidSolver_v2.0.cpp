@@ -16,7 +16,7 @@
 #include "Bitmap.h"
 #include "../VisualizationDll/VisualizationDll.h"
 #include "../SimulationDll/SimulationDll.h"
-#include <PreInformation.h>
+#include "PreInformation.h"
 
 typedef VIS::VisualizationDll Visualization;
 typedef SIM::SimulationDll2D Simulation;
@@ -70,8 +70,9 @@ static void callBack() {
 		static Bitmap bm;
 		static int i = 0;
 		char name[256];
-		sprintf_s(name, "./out/bm%04d.bmp", i++);
-		bm.SaveAsBMP(name);
+		sprintf_s(name, "./out/bm%04d.png", i++);
+		//bm.SaveAsBMP(name);
+		bm.SaveAsPNG(name);
 		setTwVisible(GUIBar, 1);
 		outSwitchP = 0;
 	}

@@ -85,7 +85,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\stb-master;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -100,7 +100,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\stb-master;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -117,7 +117,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\stb-master;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -137,7 +137,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\stb-master;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\AntTweakBar\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glm;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\glew-1.11.0\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\extern\freeglut-2.8.1\include;C:\Users\HU FANGYUAN\Documents\Visual Studio 2013\Projects\FluidSolver_v2.0\common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

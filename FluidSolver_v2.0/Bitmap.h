@@ -9,6 +9,8 @@
 #define BITMAP_H
 
 #include <cstdio>
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
 
 typedef unsigned char  U8;
 typedef unsigned short U16;
@@ -162,10 +164,49 @@ public:
         fwrite(&bmfh, sizeof(bmfh), 1, file);
         fwrite(&bmih, sizeof(bmih), 1, file);
         fwrite(data,imageSize, 1, file);
-        free(data);
+		free(data);
         fclose(file);
-		std::cout << " printing done. " << std::endl;
+		std::cout << " printing BMP done. " << std::endl;
     }
+	void SaveAsPNG(const char *fileName) {
+		FILE *file;
+		unsigned long imageSize;
+		GLbyte *data = NULL;
+		GLint viewPort[4];
+		GLenum lastBuffer;
+		BITMAPFILEHEADER bmfh;
+		BITMAPINFOHEADER bmih;
+		bmfh.bfType = 0x4D42;
+		bmfh.bfReserved1 = 0;
+		bmfh.bfReserved2 = 0;
+		bmfh.bfOffBits = 54;
+		glGetIntegerv(GL_VIEWPORT, viewPort);
+		imageSize = (viewPort[2] + ((4 - (viewPort[2] % 4))%4))*viewPort[3] * 3;
+		data = (GLbyte*)malloc(imageSize);
+		glPixelStorei(GL_PACK_ALIGNMENT, 4);
+		glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+		glPixelStorei(GL_PACK_SKIP_ROWS, 0);
+		glPixelStorei(GL_PACK_SKIP_PIXELS, 0);
+		glPixelStorei(GL_PACK_SWAP_BYTES, 1);
+		glGetIntegerv(GL_READ_BUFFER, (GLint*)&lastBuffer);
+		glReadBuffer(GL_FRONT);
+		glReadPixels(0, 0, viewPort[2], viewPort[3], GL_RGB, GL_UNSIGNED_BYTE, data);
+		glReadBuffer(lastBuffer);
+		bmih.biSize = 40;
+		bmih.biWidth = viewPort[2];
+		bmih.biHeight = viewPort[3];
+		bmih.biPlanes = 1;
+		bmih.biBitCount = 24;
+		bmih.biCompression = 0;
+		bmih.biSizeImage = imageSize;
+		bmih.biXPelsPerMeter = 45089;
+		bmih.biYPelsPerMeter = 45089;
+		bmih.biClrUsed = 0;
+		bmih.biClrImportant = 0;
+		stbi_write_png(fileName, bmih.biWidth, bmih.biHeight, 3, (data), (viewPort[2] + ((4 - (viewPort[2] % 4)) % 4)) * 3);
+		free(data);
+		std::cout << " printing PNG done. " << std::endl;
+	}
 
 public:
     unsigned int dataPos;
