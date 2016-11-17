@@ -70,13 +70,14 @@ namespace SIM {
 				file << std::scientific << std::setprecision(6);
 				file << type[p] << " " << pos[0][p] << " " << pos[1][p] << " " << vel[0][p] << " " << vel[1][p] << " " << temp[p];
 				if (type[p] == BD1 || type[p] == INLET || type[p] == OUTLET) file << " " << bdnorm.at(p)[0] << " " << bdnorm.at(p)[1];
+				if (type[p] == INLET) file << " " << pos_m1[0][p] << " " << pos_m1[1][p];
 				file << std::endl;
 			}
 			std::cout << " Writing Geo.in done. " << std::endl;
 			file.close();
 		}
 		void operator << (const std::string str) {
-			int n; int t; Vec p; Vec v; R tp; Vec norm;
+			int n; int t; Vec p; Vec v; R tp; Vec norm; Vec p_m1;
 			std::ifstream file(str);
 			if (!file.is_open()) std::cout << " File Geo.in not found ! " << std::endl;
 			file >> ct >> dp >> n;
@@ -85,9 +86,13 @@ namespace SIM {
 				file >> p[0] >> p[1];
 				file >> v[0] >> v[1];
 				file >> tp;
-				if (t == BD1 || t == INLET || t == OUTLET) {
+				if (t == BD1 || t == OUTLET) {
 					file >> norm[0] >> norm[1];
 					addPart(int(t), p, v, tp, norm);
+				}
+				else if (t == INLET) {
+					file >> norm[0] >> norm[1] >> p_m1[0] >> p_m1[1];
+					addPart(int(t), p, v, tp, norm, p_m1);
 				}
 				else addPart(int(t), p, v, tp);
 			}
@@ -111,6 +116,19 @@ namespace SIM {
 		void addPart(const int& t, const Vec& p, const Vec& v, const R& tp, const Vec& norm) {
 			type.push_back(t);
 			pos[0].push_back(p[0]);	pos[1].push_back(p[1]); pos_m1[0].push_back(p[0]); pos_m1[1].push_back(p[1]);
+			vel[0].push_back(v[0]); vel[1].push_back(v[1]); vel_p1[0].push_back(v[0]); vel_p1[1].push_back(v[1]); vel_m1[0].push_back(v[0]); vel_m1[1].push_back(v[1]);
+			temp.push_back(tp); temp_m1.push_back(tp); pres.push_back(R(0)); phi.push_back(R(0)); vort.push_back(R(0)); div.push_back(R(0));
+			bdc.push_back(0);
+			bdnorm.push_back(norm);
+			p_dirichlet.push_back(0);
+			t_dirichlet.push_back(0);
+			p_neumann.push_back(0);
+			t_neumann.push_back(0);
+			np++;
+		}
+		void addPart(const int& t, const Vec& p, const Vec& v, const R& tp, const Vec& norm, const Vec& p_m1) {
+			type.push_back(t);
+			pos[0].push_back(p[0]);	pos[1].push_back(p[1]); pos_m1[0].push_back(p_m1[0]); pos_m1[1].push_back(p_m1[1]);
 			vel[0].push_back(v[0]); vel[1].push_back(v[1]); vel_p1[0].push_back(v[0]); vel_p1[1].push_back(v[1]); vel_m1[0].push_back(v[0]); vel_m1[1].push_back(v[1]);
 			temp.push_back(tp); temp_m1.push_back(tp); pres.push_back(R(0)); phi.push_back(R(0)); vort.push_back(R(0)); div.push_back(R(0));
 			bdc.push_back(0);

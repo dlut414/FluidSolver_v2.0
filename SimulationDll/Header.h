@@ -7,7 +7,7 @@
 */
 #pragma once
 #include <string.h>
-#define DEBUG 1
+#define DEBUG 0
 #define LEGACY 0
 #define NTHREAD 4
 #define OMP	1

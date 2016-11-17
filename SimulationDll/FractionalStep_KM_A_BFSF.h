@@ -641,7 +641,7 @@ namespace SIM {
 					}
 				}
 			}
-			if (dis_min > 0.8* part->dp) return;
+			if (dis_min > 0.6* part->dp) return;
 			std::cout << " Redistribute " << std::endl;
 #if OMP
 #pragma omp parallel for
@@ -656,6 +656,7 @@ namespace SIM {
 #endif
 				for (int p = 0; p < part->np; p++) {
 					if (part->type[p] != FLUID) continue;
+					int flag = 0;
 					R Dpq[2] = { 0.0, 0.0 };
 					const auto& cell = part->cell;
 					const int cx = cell->pos2cell(part->pos[0][p]);
@@ -668,12 +669,14 @@ namespace SIM {
 							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
 							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
 							if (dr1 > part->r0) continue;
+							if (part->type[q] == INLET) flag = 1;
 							const R w = part->ww(dr1);
 							const R coeff = w / dr1;
 							Dpq[0] -= coeff * dr[0];
 							Dpq[1] -= coeff * dr[1];
 						}
 					}
+					if (flag) continue;
 					Dposx[p] += coef* Dpq[0];
 					Dposy[p] += coef* Dpq[1];
 				}

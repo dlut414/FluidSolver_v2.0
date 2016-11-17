@@ -51,13 +51,13 @@ void paintRGB() {
 	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == INLET) {
-	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	//}
+	else if (fType == INLET) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
 	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
+	else if (fType == FLUID || fType == BD1) {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -76,13 +76,13 @@ void paintRB() {
 	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == INLET) {
-	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	//}
+	else if (fType == INLET) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
 	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
+	else if (fType == FLUID || fType == BD1) {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)
@@ -141,13 +141,13 @@ void paintRGB() {
 	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == INLET) {
-	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	//}
+	else if (fType == INLET) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
 	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
+	else if (fType == FLUID || fType == BD1) {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)
@@ -166,13 +166,13 @@ void paintRB() {
 	if (fType == BD2) {
 		color = vec4(0.1f, 0.1f, 0.1f, 1.0f);
 	}
-	//else if (fType == INLET) {
-	//	color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
-	//}
+	else if (fType == INLET) {
+		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
+	}
 	else if (fType == OUTLET) {
 		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
 	}
-	else if (fType == FLUID || fType == BD1 || fType == OUTLET || fType == INLET) {
+	else if (fType == FLUID || fType == BD1) {
 		if (s_normalized >= -1.0f && s_normalized < 0.0f)
 			color = white - ((0.0f - s_normalized)* (red + green));
 		else if (s_normalized >= 0.0f && s_normalized < 1.0f)

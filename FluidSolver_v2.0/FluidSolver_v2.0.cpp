@@ -207,7 +207,7 @@ static void Initialize(int argc, char** argv) {
 	TwEnumVal ev_switch[] = { { 0, "Off" }, { 1, "On" }, };
 	TwType onoff = TwDefineEnum("onoff", ev_switch, 2);
 	TwAddVarRW(GUIBar, "Sensors", onoff, &control.i_senSwitch, " group='Output' ");
-	TwAddVarRW(GUIBar, "Bmp", onoff, &control.i_bmpSwitch, " group='Output' ");
+	TwAddVarRW(GUIBar, "Snapshot", onoff, &control.i_bmpSwitch, " group='Output' ");
 	TwAddButton(GUIBar, "RunStop", ButtonRun_callback, NULL, " label='Run' ");
 }
 
