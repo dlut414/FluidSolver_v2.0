@@ -547,7 +547,7 @@ namespace SIM {
 							if (part->type[q] == FLUID) {
 								const R dr[2] = { part->pos[0][p] - part->pos[0][q], part->pos[1][p] - part->pos[1][q] };
 								const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-								if (dr1 < 0.5 * part->dp) {
+								if (dr1 < 0.6 * part->dp) {
 									rmId.push_back(q);
 								}
 							}
