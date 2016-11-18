@@ -173,6 +173,9 @@ namespace SIM {
 		__forceinline const int* type() const {
 			return (int*)(derived().part->type.data());
 		}
+		__forceinline const R* Vorticity() const {
+			return derived().part->vort.data();
+		}
 
 	public:
 		Parameter<R, 2> para;

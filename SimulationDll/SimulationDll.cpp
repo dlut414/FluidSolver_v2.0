@@ -58,6 +58,9 @@ namespace SIM {
 	NPtr SimulationDll2D::Divergence() {
 		return NPtr(objPtr->Divergence());
 	}
+	NPtr SimulationDll2D::Vorticity() {
+		return NPtr(objPtr->Vorticity());
+	}
 	void SimulationDll2D::SaveData() {
 		objPtr->saveData();
 	}

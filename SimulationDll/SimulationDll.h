@@ -31,6 +31,7 @@ namespace SIM {
 		static SIMULATIONDLL_API NPtr Pressure();
 		static SIMULATIONDLL_API NPtr Temperature();
 		static SIMULATIONDLL_API NPtr Divergence();
+		static SIMULATIONDLL_API NPtr Vorticity();
 		static SIMULATIONDLL_API void SaveData();
 		static SIMULATIONDLL_API void SensorOut();
 		static SIMULATIONDLL_API void BBox(double&, double&, double&, double&);

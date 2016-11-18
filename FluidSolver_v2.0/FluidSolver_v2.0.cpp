@@ -28,7 +28,7 @@ static void Render() {
 	//Visualization::Run(&control, Parameters::Dimension, Simulation::Number(), Simulation::Type(), Simulation::Position(), Simulation::Scalar());
 	switch (control.m_mode) {
 	case VIS::DMODE_ONE:
-		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Temperature());
+		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Vorticity());
 		break;
 	case VIS::DMODE_TWO:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Divergence());
@@ -70,7 +70,7 @@ static void callBack() {
 		static Bitmap bm;
 		static int i = 0;
 		char name[256];
-		sprintf_s(name, "./out/bm%04d.png", i++);
+		sprintf_s(name, "./out/snap%04d.png", i++);
 		//bm.SaveAsBMP(name);
 		bm.SaveAsPNG(name);
 		setTwVisible(GUIBar, 1);
@@ -198,7 +198,7 @@ static void Initialize(int argc, char** argv) {
 	TwWindowSize(control.u_width, control.u_height);
 	GUIBar = TwNewBar("GUI");
 	TwDefine(" GUI size='180 300' ");
-	TwEnumVal ev[] = { { VIS::DMODE_ONE, "Temperature" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, };
+	TwEnumVal ev[] = { { VIS::DMODE_ONE, "Vorticity" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, };
 	TwType quantity = TwDefineEnum("quantity", ev, 5);
 	TwAddVarRW(GUIBar, "Quantity", quantity, &control.m_mode, " group='Display' ");
 	TwAddVarRW(GUIBar, "Min", TW_TYPE_FLOAT, &control.f_sRangeMin, " group='Range' ");

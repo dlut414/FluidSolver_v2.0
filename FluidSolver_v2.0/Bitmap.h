@@ -174,14 +174,12 @@ public:
 		GLbyte *data = NULL;
 		GLint viewPort[4];
 		GLenum lastBuffer;
-		BITMAPFILEHEADER bmfh;
 		BITMAPINFOHEADER bmih;
-		bmfh.bfType = 0x4D42;
-		bmfh.bfReserved1 = 0;
-		bmfh.bfReserved2 = 0;
-		bmfh.bfOffBits = 54;
 		glGetIntegerv(GL_VIEWPORT, viewPort);
-		imageSize = (viewPort[2] + ((4 - (viewPort[2] % 4))%4))*viewPort[3] * 3;
+		bmih.biWidth = (viewPort[2] + ((4 - (viewPort[2] % 4)) % 4));
+		bmih.biHeight = viewPort[3];
+		bmih.biSizeImage = (bmih.biWidth)*(bmih.biHeight) * 3;
+		imageSize = bmih.biSizeImage;
 		data = (GLbyte*)malloc(imageSize);
 		glPixelStorei(GL_PACK_ALIGNMENT, 4);
 		glPixelStorei(GL_PACK_ROW_LENGTH, 0);
@@ -192,19 +190,15 @@ public:
 		glReadBuffer(GL_FRONT);
 		glReadPixels(0, 0, viewPort[2], viewPort[3], GL_RGB, GL_UNSIGNED_BYTE, data);
 		glReadBuffer(lastBuffer);
-		bmih.biSize = 40;
-		bmih.biWidth = viewPort[2];
-		bmih.biHeight = viewPort[3];
-		bmih.biPlanes = 1;
-		bmih.biBitCount = 24;
-		bmih.biCompression = 0;
-		bmih.biSizeImage = imageSize;
-		bmih.biXPelsPerMeter = 45089;
-		bmih.biYPelsPerMeter = 45089;
-		bmih.biClrUsed = 0;
-		bmih.biClrImportant = 0;
-		stbi_write_png(fileName, bmih.biWidth, bmih.biHeight, 3, (data), (viewPort[2] + ((4 - (viewPort[2] % 4)) % 4)) * 3);
+		GLbyte* swap = (GLbyte*)malloc(imageSize);
+		for (int i = 0; i < bmih.biHeight; i++) {
+			for (int j = 0; j < bmih.biWidth*3; j++) {
+				swap[i*bmih.biWidth*3 + j] = data[(bmih.biHeight - i - 1)*bmih.biWidth*3 + j];
+			}
+		}
+		stbi_write_png(fileName, bmih.biWidth, bmih.biHeight, 3, (swap), bmih.biWidth*3);
 		free(data);
+		free(swap);
 		std::cout << " printing PNG done. " << std::endl;
 	}
 
