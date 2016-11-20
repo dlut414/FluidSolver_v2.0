@@ -169,7 +169,6 @@ public:
 		std::cout << " printing BMP done. " << std::endl;
     }
 	void SaveAsPNG(const char *fileName) {
-		FILE *file;
 		unsigned long imageSize;
 		GLbyte *data = NULL;
 		GLint viewPort[4];

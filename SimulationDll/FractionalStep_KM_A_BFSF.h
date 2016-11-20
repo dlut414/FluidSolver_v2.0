@@ -146,6 +146,13 @@ namespace SIM {
 					Dqp[1] = part->pos[1][p] - part->pos[1][q];
 					part->vel_p1[0][p] = part->vel_p1[0][q] + gradX_p.dot(Dqp);
 					part->vel_p1[1][p] = part->vel_p1[1][q] + gradY_p.dot(Dqp);
+					const R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
+					if (flowRate < R(0)) {
+						std::cout << " Flow in at OUTLET ! " << std::endl;
+						std::cout << " Clamp to Zero ! " << std::endl;
+						part->vel_p1[0][p] = part->vel_p1[0][p] - flowRate * norm[0];
+						part->vel_p1[1][p] = part->vel_p1[1][p] - flowRate * norm[1];
+					}
 				}
 			}
 		}

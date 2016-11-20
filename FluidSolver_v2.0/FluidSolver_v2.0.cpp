@@ -61,6 +61,7 @@ static void callBack() {
 		Simulation::SaveData();
 		control.i_save = 0;
 	}
+	if (count % 500 == 0 && count != 0) Simulation::SaveData();
 	if (control.i_sens || (outSwitchS && control.i_senSwitch)) {
 		Simulation::SensorOut();
 		outSwitchS = 0;
@@ -179,6 +180,7 @@ static void Initialize(int argc, char** argv) {
 	double left, right, bottom, top;
 	Simulation::BBox(left, right, bottom, top);
 	control.setProjectionOR(float(left), float(right), float(bottom), float(top));
+	control.u_width = GLuint(control.u_height / (top - bottom) * (right - left));
 
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA | GLUT_DEPTH);
