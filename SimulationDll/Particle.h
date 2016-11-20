@@ -204,7 +204,7 @@ namespace SIM {
 				pp[1] = pos[1][p];
 				b += pp;
 			}
-			b.Expand(0.1);
+			b.Expand(0.05);
 			cell = new LinkCell<R,2>(b, r0);
 			updateCell();
 		}

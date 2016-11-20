@@ -43,7 +43,7 @@ namespace VIS {
 			i_bmp = 0;
 			i_senSwitch = 1;
 			i_bmpSwitch = 1;
-			u_width = 1600;
+			u_width = 1800;
 			u_height = 250;
 			f_sRangeMax = 1.0f;
 			f_sRangeMin = -1.0f;
