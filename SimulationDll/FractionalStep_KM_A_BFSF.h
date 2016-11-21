@@ -270,6 +270,7 @@ namespace SIM {
 		void makeRhs_v_q1r0_outletNormalized() {
 ///@ concept 2: normalize OUTLET velocity
 			const R coef_local = R(1) / (para.dt * para.Pr);
+			const R epsilon_local = 1.e-6;
 			R inletSum = 0;
 			R outletSum = 0;
 #if OMP
@@ -319,8 +320,8 @@ namespace SIM {
 				}
 			}
 			int sign = (outletSum > 0) - (outletSum < 0);
-			if (sign == 0) outletSum = part->eps;
-			else if (abs(outletSum) < part->eps) outletSum = sign * part->eps;
+			if (sign == 0) outletSum = epsilon_local;
+			else if (abs(outletSum) < epsilon_local) outletSum = sign * epsilon_local;
 #if OMP
 #pragma omp parallel for
 #endif

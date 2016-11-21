@@ -83,7 +83,7 @@ static void callBack() {
 			outSwitchS = 1;
 			outSwitchP = 1;
 		}
-		control.i_dirty = 1;
+		//control.i_dirty = 1;
 	}
 }
 static void fps() {
@@ -155,10 +155,7 @@ static void onDisplay() {
 
 	callBack();
 
-	if (control.i_dirty) {
-		glutPostRedisplay();
-		control.i_dirty = 0;
-	}
+	glutPostRedisplay();
 	if (control.i_leave) {
 		glutLeaveMainLoop();
 	}
