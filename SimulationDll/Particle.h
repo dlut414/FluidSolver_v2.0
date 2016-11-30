@@ -215,29 +215,6 @@ namespace SIM {
 			cell->getBBox(left, right, bottom, top);
 		}
 
-		void makeBdc() {
-			for (int p = 0; p < np; p++) {
-				bdc[p] = 0;
-				if (type[p] == BD1 || type[p] == INLET || type[p] == OUTLET) {
-					bdc[p] = ON(bdc[p], P_NEUMANN);
-				}
-			}
-		}
-
-		void b2neumann() {
-			for (int p = 0; p < np; p++) {
-				if (IS(bdc[p], P_NEUMANN)) p_neumann[p] = R(0);
-				if (IS(bdc[p], T_NEUMANN)) t_neumann[p] = R(0);
-			}
-		}
-		void b2dirichlet() {
-			for (int p = 0; p < np; p++) {
-				if (IS(bdc[p], P_DIRICHLET)) p_dirichlet[p] = R(0);
-				if (IS(bdc[p], T_DIRICHLET0)) t_dirichlet[p] = R(0);
-				if (IS(bdc[p], T_DIRICHLET1)) t_dirichlet[p] = R(1);
-			}
-		}
-
 	public:
 		R ct;
 		int np;

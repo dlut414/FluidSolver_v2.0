@@ -40,14 +40,32 @@ namespace SIM {
 			*part << "Geo.in";
 			part->init(para.k);
 			part->buildCell();
-			part->makeBdc();
-			part->b2b();
-			part->b2normal();
-			part->b2neumann();
-			part->b2dirichlet();
 			part->init_x();
+			makeBC();
+			b2neumann();
+			b2dirichlet();
 			sen = new Sensor<R,2,Particle_x<R,2,P>>(part);
 			*sen << "Sensor.in";
+		}
+
+		void makeBC() {
+			for (int p = 0; p < part->np; p++) {
+				part->bdc[p] = 0;
+				if (part->type[p] == BD1 || part->type[p] == INLET || part->type[p] == OUTLET) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
+			}
+		}
+		void b2neumann() {
+			for (int p = 0; p < part->np; p++) {
+				if (IS(part->bdc[p], P_NEUMANN)) part->p_neumann[p] = R(0);
+				if (IS(part->bdc[p], T_NEUMANN)) part->t_neumann[p] = R(0);
+			}
+		}
+		void b2dirichlet() {
+			for (int p = 0; p < part->np; p++) {
+				if (IS(part->bdc[p], P_DIRICHLET)) part->p_dirichlet[p] = R(0);
+				if (IS(part->bdc[p], T_DIRICHLET0)) part->t_dirichlet[p] = R(0);
+				if (IS(part->bdc[p], T_DIRICHLET1)) part->t_dirichlet[p] = R(1);
+			}
 		}
 
 		void step() {

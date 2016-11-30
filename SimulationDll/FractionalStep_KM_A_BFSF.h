@@ -42,12 +42,28 @@ namespace SIM {
 			*part << "Geo.in";
 			part->init(para.k);
 			part->buildCell();
-			part->makeBdc();
-			part->b2neumann();
-			part->b2dirichlet();
 			part->init_x();
+			makeBC();
+			b2neumann();
+			b2dirichlet();
 			sen = new Sensor<R,2,Particle_x<R,2,P>>(part);
 			*sen << "Sensor.in";
+		}
+
+		void makeBC() {
+			for (int p = 0; p < part->np; p++) {
+				part->bdc[p] = 0;
+				if (part->type[p] == BD1 || part->type[p] == INLET || part->type[p] == OUTLET) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
+			}
+		}
+		void b2neumann() {
+			for (int p = 0; p < part->np; p++) {
+				if (IS(part->bdc[p], P_NEUMANN)) part->p_neumann[p] = R(0);
+			}
+		}
+		void b2dirichlet() {
+			for (int p = 0; p < part->np; p++) {
+			}
 		}
 
 		void step() {
@@ -416,7 +432,18 @@ namespace SIM {
 						mSol->b[p] -= cst;
 					}
 					else if (part->type[p] == INLET || part->type[p] == OUTLET) {
+						///???
 						///neumann = 0;
+						Vec& normal = part->bdnorm.at(p);
+						VecP inner = VecP::Zero();
+						inner.block<2, 1>(0, 0) = normal;
+						const Vec lap_ustar_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
+						const R neumannX = para.Pr* lap_ustar_local[0];
+						const R neumannY = para.Pr* lap_ustar_local[1];
+						const R neumann = neumannX* normal[0] + neumannY* normal[1];
+						const VecP aa = part->invNeu.at(p)* inner;
+						const R cst = neumann *part->ww(R(0))* (R(1) / part->varrho) * (part->pn_lap_o.dot(aa));
+						mSol->b[p] -= cst;
 					}
 				}
 			}

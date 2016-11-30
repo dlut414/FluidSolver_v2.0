@@ -183,23 +183,6 @@ namespace SIM {
 
 	protected:
 		void step() {}
-		void convect() {}
-		void visTerm_e() {}
-		void visTerm_i() {}
-		void presTerm_e() {}
-		void presTerm_i() {}
-		void makeDirchlet_v() {}
-
-		void makeNeumann_p() {
-			auto* const part = derived().part;
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != BD1) continue;
-				part->neumann[p] = R(0);
-			}
-		}
 
 		void solveMat_p() {
 			mSol->biCg();
