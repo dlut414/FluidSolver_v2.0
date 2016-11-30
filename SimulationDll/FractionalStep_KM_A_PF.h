@@ -5,12 +5,12 @@
 * Author: HUFANGYUAN
 * Released under CC BY-NC
 */
-//FractionalStep_KM_A_BFSF.h
+//FractionalStep_KM_A_PF.h
 ///defination of class FractionalStep_KM_A_ (Kim & Moin)
-///Backward-facing step flow
-/// FractionalStep scheme with modified Dirichlet condition for velocity PE and Neumann condition for Pressure PE
-/// inlet/outlet B.C.: velocity -> Dirichlet condition    pressure -> homogeneous Neumann condition
-/// inlet: velocity profile specified    outlet: fully developed flow
+///Poiseuille flow
+/// FractionalStep scheme with modified Dirichlet condition for velocity PE and Dirichlet/Neumann condition for Pressure PE
+/// inlet/outlet B.C.: velocity -> Dirichlet condition    pressure -> Dirichlet/homogeneous Neumann condition
+/// inlet: pressure specified / velocity profile specified    outlet: pressure specified / fully developed flow
 #pragma once
 #include "Simulator.h"
 #include "Particle_x.h"
@@ -19,13 +19,13 @@
 namespace SIM {
 	
 	template <typename R, int D, int P>
-	class FractionalStep_KM_A_BFSF : public Simulator<R,D,FractionalStep_KM_A_BFSF<R,D,P>> {};
+	class FractionalStep_KM_A_PF : public Simulator<R,D,FractionalStep_KM_A_PF<R,D,P>> {};
 
 	template <typename R, int P>
-	class FractionalStep_KM_A_BFSF<R,1,P> : public Simulator<R,1,FractionalStep_KM_A_BFSF<R,1,P>> {};
+	class FractionalStep_KM_A_PF<R,1,P> : public Simulator<R,1,FractionalStep_KM_A_PF<R,1,P>> {};
 
 	template <typename R, int P>
-	class FractionalStep_KM_A_BFSF<R,2,P> : public Simulator<R,2,FractionalStep_KM_A_BFSF<R,2,P>> {
+	class FractionalStep_KM_A_PF<R,2,P> : public Simulator<R,2,FractionalStep_KM_A_PF<R,2,P>> {
 		typedef mMath::Polynomial_A<R,2,P> PN;
 		typedef mMath::Derivative_A<R,2,P> DR;
 		typedef Eigen::Matrix<R,PN::value,1> VecP;
@@ -33,8 +33,8 @@ namespace SIM {
 		typedef Eigen::Matrix<R,PN::value,PN::value> MatPP;
 		typedef Eigen::Triplet<R> Tpl;
 	public:
-		FractionalStep_KM_A_BFSF() {}
-		~FractionalStep_KM_A_BFSF() {}
+		FractionalStep_KM_A_PF() {}
+		~FractionalStep_KM_A_PF() {}
 
 		void init_() {
 			part = new Particle_x<R,2,P>();
@@ -805,5 +805,5 @@ namespace SIM {
 	};
 
 	template <typename R, int P>
-	class FractionalStep_KM_A_BFSF<R,3,P> : public Simulator<R,3,FractionalStep_KM_A_BFSF<R,3,P>>  {};
+	class FractionalStep_KM_A_PF<R,3,P> : public Simulator<R,3,FractionalStep_KM_A_PF<R,3,P>>  {};
 }

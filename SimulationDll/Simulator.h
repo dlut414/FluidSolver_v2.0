@@ -201,7 +201,7 @@ namespace SIM {
 			}
 		}
 
-		void solvMat_p() {
+		void solveMat_p() {
 			mSol->biCg();
 			auto* const part = derived().part;
 #if OMP
@@ -214,7 +214,7 @@ namespace SIM {
 			}
 		}
 
-		void solvMat_phi() {
+		void solveMat_phi() {
 			auto* const part = derived().part;
 			mSol->ccBiCg_augment(part->type);
 #if OMP
@@ -227,7 +227,7 @@ namespace SIM {
 			}
 		}
 
-		void solvMat_t() {
+		void solveMat_t() {
 			mSol->biCg();
 			auto* const part = derived().part;
 #if OMP
@@ -239,7 +239,7 @@ namespace SIM {
 			}
 		}
 
-		void solvMat_v() {
+		void solveMat_v() {
 			mSol->biCg_v();
 			auto* const part = derived().part;
 #if OMP

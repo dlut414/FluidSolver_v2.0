@@ -6,7 +6,8 @@
 * Released under CC BY-NC
 */
 //FractionalStep_KM_A.h
-///defination of class FractionalStep_KM_A (Kim & Moin)
+///defination of class FractionalStep_KM_A_ (Kim & Moin)
+///Buoyancy-driven flow
 /// FractionalStep scheme with modified Dirichlet condition for velocity and Neumann condition for Pressure
 #pragma once
 #include "Simulator.h"
@@ -52,13 +53,13 @@ namespace SIM {
 		void step() {
 			calInvMat();
 
-			temperatureTerm_i_q1CN();
-			visTerm_i_q1r0();
-			presTerm_i_q1();
+			TPE_q1CN();
+			VPE_q1r0();
+			PPE_q1();
 
 			syncPos();
-			updateVelocity_q1();
-			updatePosition_s1();
+			adVel_q1();
+			adPos_s1();
 
 			calCell();
 			calInvMat();
@@ -79,53 +80,53 @@ namespace SIM {
 			//shi.StaticWENOModel(part);
 		}
 
-		void visTerm_i_q2r1() {
-			makeLhs_v_q2();
-			makeRhs_v_q2r1();
-			solvMat_v();
+		void VPE_q2r1() {
+			LHS_v_q2();
+			RHS_v_q2r1();
+			solveMat_v();
 		}
 
-		void visTerm_i_q1r0() {
-			makeLhs_v_q1();
-			makeRhs_v_q1r0();
-			solvMat_v();
+		void VPE_q1r0() {
+			LHS_v_q1();
+			RHS_v_q1r0();
+			solveMat_v();
 		}
 
-		void visTerm_i_q2r0() {
-			makeLhs_v_q2();
-			makeRhs_v_q2r0();
-			solvMat_v();
+		void VPE_q2r0() {
+			LHS_v_q2();
+			RHS_v_q2r0();
+			solveMat_v();
 		}
 
-		void presTerm_i_q2() {
-			makeLhs_p();
-			makeRhs_p_q2();
-			solvMat_phi();
+		void PPE_q2() {
+			LHS_p();
+			RHS_p_q2();
+			solveMat_phi();
 			//for (int p = 0; p < part->np; p++) {
 			//	//std::cout << (R(3.0) / (R(2.0)* para.dt))* part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p) - part->Lap(part->phi.data(), p) - mSol->x[part->np] << std::endl;
 			//	//std::cout << (mSol->a.row(p).dot( mSol->x)) - mSol->b[p] << std::endl;
 			//}
 		}
 
-		void presTerm_i_q1() {
-			makeLhs_p();
-			makeRhs_p_q1();
-			solvMat_phi();
+		void PPE_q1() {
+			LHS_p();
+			RHS_p_q1();
+			solveMat_phi();
 		}
 
-		void temperatureTerm_i_q1CN() {
-			makeLhs_t_q1CN();
-			makeRhs_t_q1CN();
-			solvMat_t();
+		void TPE_q1CN() {
+			LHS_t_q1CN();
+			RHS_t_q1CN();
+			solveMat_t();
 		}
 
-		void temperatureTerm_i_q2IE() {
-			makeLhs_t_q2IE();
-			makeRhs_t_q2IE();
-			solvMat_t();
+		void TPE_q2IE() {
+			LHS_t_q2IE();
+			RHS_t_q2IE();
+			solveMat_t();
 		}
 
-		void updateVelocity_q1() {
+		void adVel_q1() {
 			const R coef_local = para.dt;
 #if OMP
 #pragma omp parallel for
@@ -151,7 +152,7 @@ namespace SIM {
 			}
 		}
 
-		void updateVelocity_q2() {
+		void adVel_q2() {
 			const R coef_local = (R(2)* para.dt) / R(3);
 #if OMP
 #pragma omp parallel for
@@ -177,7 +178,7 @@ namespace SIM {
 			}
 		}
 
-		void updatePosition_s1() {
+		void adPos_s1() {
 //			const R coef_local = R(0.5)* para.dt;
 //#if OMP
 //#pragma omp parallel for
@@ -200,7 +201,7 @@ namespace SIM {
 			}
 		}
 
-		void updatePosition_s2() {
+		void adPos_s2() {
 			const R coef_local = 0.5* para.dt;
 #if OMP
 #pragma omp parallel for
@@ -218,7 +219,7 @@ namespace SIM {
 		Sensor<R,2,Particle_x<R,2,P>>* sen;
 
 	private:
-		void makeLhs_v_q2() {
+		void LHS_v_q2() {
 			coef.clear();
 			R coefI_local = R(3) / (R(2) * para.dt * para.Pr);
 			for (int p = 0; p < part->np; p++) {
@@ -258,7 +259,7 @@ namespace SIM {
 			mSol->au.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeLhs_v_q1() {
+		void LHS_v_q1() {
 			coef.clear();
 			R coefI_local = R(1) / (para.dt * para.Pr);
 			for (int p = 0; p < part->np; p++) {
@@ -298,7 +299,7 @@ namespace SIM {
 			mSol->au.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeRhs_v_q2r1() {
+		void RHS_v_q2r1() {
 #if OMP
 #pragma omp parallel for
 #endif
@@ -317,7 +318,7 @@ namespace SIM {
 			}
 		}
 
-		void makeRhs_v_q1r0() {
+		void RHS_v_q1r0() {
 			const R coef_local = R(1) / (para.dt * para.Pr);
 #if OMP
 #pragma omp parallel for
@@ -339,7 +340,7 @@ namespace SIM {
 			}
 		}
 
-		void makeRhs_v_q2r0() {
+		void RHS_v_q2r0() {
 			const R two_over_three = R(2) / R(3);
 			const R coef_local = R(1) / (R(2)* para.dt * para.Pr);
 #if OMP
@@ -363,7 +364,7 @@ namespace SIM {
 		}
 
 
-		void makeLhs_p() {
+		void LHS_p() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == BD2) {
@@ -403,7 +404,7 @@ namespace SIM {
 			mSol->a.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeRhs_p_q2() {
+		void RHS_p_q2() {
 			const R coef_local = R(3) / (R(2)* para.dt);
 #if OMP
 #pragma omp parallel for
@@ -426,7 +427,7 @@ namespace SIM {
 			}
 		}
 
-		void makeRhs_p_q1() {
+		void RHS_p_q1() {
 			const R coef_local = R(1) / para.dt;
 #if OMP
 #pragma omp parallel for
@@ -453,7 +454,7 @@ namespace SIM {
 			}
 		}
 
-		void makeLhs_t_q1CN() {
+		void LHS_t_q1CN() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == BD2) {
@@ -497,7 +498,7 @@ namespace SIM {
 			mSol->a.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeRhs_t_q1CN() {
+		void RHS_t_q1CN() {
 			const R coef_local = R(0.5)* para.dt;
 #if OMP
 #pragma omp parallel for
@@ -522,7 +523,7 @@ namespace SIM {
 			}
 		}
 
-		void makeLhs_t_q2IE() {
+		void LHS_t_q2IE() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == BD2) {
@@ -566,7 +567,7 @@ namespace SIM {
 			mSol->a.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeRhs_t_q2IE() {
+		void RHS_t_q2IE() {
 			const R coef_local = R(1) / (R(2)* para.dt);
 #if OMP
 #pragma omp parallel for

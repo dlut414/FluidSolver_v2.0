@@ -53,13 +53,13 @@ namespace SIM {
 		void step() {
 			calInvMat();
 
-			temperatureTerm_i_CN1();
-			presTerm_i_q2();
-			visTerm_i_q2r0();
+			TPE_CN1();
+			PPE_q2();
+			VPE_q2r0();
 
 			syncPos();
-			updateVelocity_q2();
-			updatePosition_s2();
+			adVel_q2();
+			adPos_s2();
 
 			calCell();
 			calInvMat();
@@ -77,47 +77,47 @@ namespace SIM {
 			//shi.SpringUpwindModel(part, para);
 		}
 
-		void visTerm_i_q2r1() {
-			makeLhs_v_q2();
-			makeRhs_v_q2r1();
-			solvMat_v();
+		void VPE_q2r1() {
+			LHS_v_q2();
+			RHS_v_q2r1();
+			solveMat_v();
 		}
 
-		void visTerm_i_q1r0() {
-			makeLhs_v_q1();
-			makeRhs_v_q1r0();
-			solvMat_v();
+		void VPE_q1r0() {
+			LHS_v_q1();
+			RHS_v_q1r0();
+			solveMat_v();
 		}
 
-		void visTerm_i_q2r0() {
-			makeLhs_v_q2();
-			makeRhs_v_q2r0();
-			solvMat_v();
+		void VPE_q2r0() {
+			LHS_v_q2();
+			RHS_v_q2r0();
+			solveMat_v();
 		}
 
-		void presTerm_i_q2() {
-			makeLhs_p();
-			makeRhs_p_q2();
-			solvMat_phi();
+		void PPE_q2() {
+			LHS_p();
+			RHS_p_q2();
+			solveMat_phi();
 			//for (int p = 0; p < part->np; p++) {
 			//	//if (p == 165) PRINT( (R(3.0) / (R(2.0)* para.dt))* part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p) - part->Lap(part->phi.data(), p) - mSol->x[part->np] );
 			//	//if (p == 165) PRINT( (mSol->a.row(p).dot( mSol->x)) - mSol->b[p] );
 			//}
 		}
 
-		void presTerm_i_q1() {
-			makeLhs_p();
-			makeRhs_p_q1();
-			solvMat_phi();
+		void PPE_q1() {
+			LHS_p();
+			RHS_p_q1();
+			solveMat_phi();
 		}
 
-		void temperatureTerm_i_CN1() {
-			makeLhs_t_CN1();
-			makeRhs_t_CN1();
-			solvMat_t();
+		void TPE_CN1() {
+			LHS_t_CN1();
+			RHS_t_CN1();
+			solveMat_t();
 		}
 
-		void updateVelocity_q1() {
+		void adVel_q1() {
 			const R coefL = para.dt;
 #if OMP
 #pragma omp parallel for
@@ -139,7 +139,7 @@ namespace SIM {
 			}
 		}
 
-		void updateVelocity_q2() {
+		void adVel_q2() {
 			const R coefL = (R(2)* para.dt) / (R(3));
 #if OMP
 #pragma omp parallel for
@@ -149,7 +149,7 @@ namespace SIM {
 			}
 		}
 
-		void updatePosition_s1() {
+		void adPos_s1() {
 			const R coefL = R(0.5)* para.dt;
 #if OMP
 #pragma omp parallel for
@@ -162,7 +162,7 @@ namespace SIM {
 			}
 		}
 
-		void updatePosition_s2() {
+		void adPos_s2() {
 			const R coefL = 0.5* para.dt;
 #if OMP
 #pragma omp parallel for
@@ -180,7 +180,7 @@ namespace SIM {
 		Sensor<R,2,Particle_x<R,2,P>>* sen;
 
 	private:
-		void makeLhs_v_q2() {
+		void LHS_v_q2() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == BD1 || part->type[p] == BD2) {
@@ -219,7 +219,7 @@ namespace SIM {
 			mSol->au.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeLhs_v_q1() {
+		void LHS_v_q1() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == BD1 || part->type[p] == BD2) {
@@ -258,7 +258,7 @@ namespace SIM {
 			mSol->au.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeRhs_v_q2r1() {
+		void RHS_v_q2r1() {
 #if OMP
 #pragma omp parallel for
 #endif
@@ -277,7 +277,7 @@ namespace SIM {
 			}
 		}
 
-		void makeRhs_v_q1r0() {
+		void RHS_v_q1r0() {
 #if OMP
 #pragma omp parallel for
 #endif
@@ -295,7 +295,7 @@ namespace SIM {
 			}
 		}
 
-		void makeRhs_v_q2r0() {
+		void RHS_v_q2r0() {
 #if OMP
 #pragma omp parallel for
 #endif
@@ -316,7 +316,7 @@ namespace SIM {
 		}
 
 
-		void makeLhs_p() {
+		void LHS_p() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == BD2) {
@@ -356,7 +356,7 @@ namespace SIM {
 			mSol->a.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeRhs_p_q2() {
+		void RHS_p_q2() {
 			const R RaPr = para.Ra* para.Pr;
 			const R one_over_dt = R(1) / para.dt;
 #if OMP
@@ -382,7 +382,7 @@ namespace SIM {
 			}
 		}
 
-		void makeRhs_p_q1() {
+		void RHS_p_q1() {
 			const R coefL = R(1.0) / para.dt;
 			part->DivGrad(part->phi.data(), DGP_old.data());
 #if OMP
@@ -406,7 +406,7 @@ namespace SIM {
 			}
 		}
 
-		void makeLhs_t_CN1() {
+		void LHS_t_CN1() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == BD2) {
@@ -450,7 +450,7 @@ namespace SIM {
 			mSol->a.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void makeRhs_t_CN1() {
+		void RHS_t_CN1() {
 			const R coefL = 0.5* para.dt;
 #if OMP
 #pragma omp parallel for
