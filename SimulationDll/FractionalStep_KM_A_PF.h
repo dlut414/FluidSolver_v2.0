@@ -25,6 +25,7 @@ namespace SIM {
 	class FractionalStep_KM_A_PF<R,1,P> : public Simulator<R,1,FractionalStep_KM_A_PF<R,1,P>> {};
 
 	///inlet/outlet: pressure specified
+	/*
 	template <typename R, int P>
 	class FractionalStep_KM_A_PF<R,2,P> : public Simulator<R,2,FractionalStep_KM_A_PF<R,2,P>> {
 		typedef mMath::Polynomial_A<R,2,P> PN;
@@ -722,9 +723,8 @@ namespace SIM {
 		Shifter<R,2> shi;
 		std::vector<Tpl> coef;
 	};
-
+	*/
 	///inlet: velocity specified; outlet: fully developed flow
-/*
 	template <typename R, int P>
 	class FractionalStep_KM_A_PF<R, 2, P> : public Simulator<R, 2, FractionalStep_KM_A_PF<R, 2, P>>{
 		typedef mMath::Polynomial_A<R, 2, P> PN;
@@ -784,6 +784,8 @@ namespace SIM {
 			InletOutletPart();
 
 			sync();
+			calCell();
+			calInvMat();
 		}
 
 		void Redistribute() {
@@ -1468,7 +1470,6 @@ namespace SIM {
 		Shifter<R, 2> shi;
 		std::vector<Tpl> coef;
 	};
-	*/
 
 	template <typename R, int P>
 	class FractionalStep_KM_A_PF<R,3,P> : public Simulator<R,3,FractionalStep_KM_A_PF<R,3,P>>  {};

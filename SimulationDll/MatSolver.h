@@ -8,7 +8,7 @@
 #include <Eigen/OrderingMethods>
 #include "Header.h"
 
-#define AUGMENT (0)
+#define AUGMENT (1)
 #define AG AUGMENT
 
 namespace SIM {
