@@ -118,6 +118,11 @@ namespace SIM {
 					const Vec du = -coef_local * part->Grad(part->pres.data(), p);
 					part->vel_p1[0][p] += du[0];
 					part->vel_p1[1][p] += du[1];
+					if (part->type[p] == INLET) {
+						const Vec vel_p = (part->bdnorm[p][0] * part->vel_p1[0][p] + part->bdnorm[p][1] * part->vel_p1[1][p])* part->bdnorm[p];
+						part->vel_p1[0][p] = vel_p[0];
+						part->vel_p1[1][p] = vel_p[1];
+					}
 				}
 				else if (part->type[p] == BD1) {
 					part->vel_p1[0][p] = part->vel[0][p];
@@ -486,7 +491,7 @@ namespace SIM {
 							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
 							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
 							if (dr1 > part->r0) continue;
-							if (part->type[q] == OUTLET) flag = 1;
+							if (part->type[q] == INLET || part->type[q] == OUTLET) flag = 1;
 							const R w = part->ww(dr1);
 							const R coeff = w / dr1;
 							Dpq[0] -= coeff * dr[0];
