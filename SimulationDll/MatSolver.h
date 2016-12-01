@@ -8,7 +8,7 @@
 #include <Eigen/OrderingMethods>
 #include "Header.h"
 
-#define AUGMENT (1)
+#define AUGMENT (0)
 #define AG AUGMENT
 
 namespace SIM {
@@ -36,11 +36,17 @@ namespace SIM {
 		}
 
 		void biCg() {
-			solverBiCgDia.compute(a);
+			///!!!zero diagonal
+			//solverBiCgDia.compute(a);
+			////x = solverBiCgDia.solveWithGuess(b, x);
+			//x = solverBiCgDia.solve(b);
+			//std::cout << " iterations ----------> " << solverBiCgDia.iterations() << std::endl;
+			//std::cout << " error ---------------> " << solverBiCgDia.error() << std::endl;
+			solverBiCgILU.compute(a);
 			//x = solverBiCgDia.solveWithGuess(b, x);
-			x = solverBiCgDia.solve(b);
-			std::cout << " iterations ----------> " << solverBiCgDia.iterations() << std::endl;
-			std::cout << " error ---------------> " << solverBiCgDia.error() << std::endl;
+			x = solverBiCgILU.solve(b);
+			std::cout << " iterations ----------> " << solverBiCgILU.iterations() << std::endl;
+			std::cout << " error ---------------> " << solverBiCgILU.error() << std::endl;
 //			R rho;
 //			R alpha;
 //			R beta;

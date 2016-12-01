@@ -41,18 +41,20 @@ namespace SIM {
 
 		void operator >> (const std::string& str) {
 			std::ofstream file;
-			//interpolateVelocity();
-			//file.open("./out/s" + str + ".out", std::ofstream::out);
-			//for (auto s = 0; s < pos.size(); s++) {
-			//	for (auto d = 0; d < 2; d++) {
-			//		file << std::setprecision(6) << std::scientific << pos[s][d] << " ";
-			//	}
-			//	for (auto d = 0; d < 2; d++) {
-			//		file << std::setprecision(6) << std::scientific << vel[s][d] << " ";
-			//	}
-			//	file << std::endl;
-			//}
-			//file.close();
+			if (pos.size() != 0) {
+				interpolateVelocity();
+				file.open("./out/s" + str + ".out", std::ofstream::out);
+				for (auto s = 0; s < pos.size(); s++) {
+					for (auto d = 0; d < 2; d++) {
+						file << std::setprecision(6) << std::scientific << pos[s][d] << " ";
+					}
+					for (auto d = 0; d < 2; d++) {
+						file << std::setprecision(6) << std::scientific << vel[s][d] << " ";
+					}
+					file << std::endl;
+				}
+				file.close();
+			}
 			//computeNusselt();
 			//const auto& pt = ptr->derived();
 			//file.open("./out/nu" + str + ".out", std::ofstream::out);

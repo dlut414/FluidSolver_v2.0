@@ -185,8 +185,8 @@ namespace SIM {
 		void step() {}
 
 		void solveMat_p() {
-			mSol->biCg();
 			auto* const part = derived().part;
+			mSol->biCg();
 #if OMP
 #pragma omp parallel for
 #endif
@@ -281,7 +281,7 @@ namespace SIM {
 		void check() const {
 			const auto* const part = derived().part;
 			R velMax = std::numeric_limits<R>::min();
-			R phiMax = std::numeric_limits<R>::min();
+			R presMax = std::numeric_limits<R>::min();
 			R divMax = std::numeric_limits<R>::min();
 			int idv = 0, idp = 0, idd = 0;
 			for (int p = 0; p < part->np; p++) {
@@ -289,14 +289,14 @@ namespace SIM {
 				const R ux = part->vel[0][p];
 				const R uy = part->vel[1][p];
 				const R vel = sqrt(ux*ux + uy*uy);
-				const R phi = part->phi[p];
+				const R pres = part->pres[p];
 				const R div = part->div[p];
 				if (vel > velMax) {
 					velMax = vel;
 					idv = p;
 				}
-				if (abs(phi) > abs(phiMax)) {
-					phiMax = phi;
+				if (abs(pres) > abs(presMax)) {
+					presMax = pres;
 					idp = p;
 				}
 				if (abs(div) > abs(divMax)) {
@@ -305,7 +305,7 @@ namespace SIM {
 				}
 			}
 			std::cout << " max vel: " << velMax << " --- id: " << idv << std::endl;
-			std::cout << " max phi: " << phiMax << " --- id: " << idp << std::endl;
+			std::cout << " max pres: " << presMax << " --- id: " << idp << std::endl;
 			std::cout << " max Div: " << divMax << " --- id: " << idd << std::endl;
 		}
 
