@@ -86,6 +86,8 @@ namespace SIM {
 			InletOutletPart();
 
 			sync();
+			calCell();
+			calInvMat();
 		}
 
 		void Redistribute() {
