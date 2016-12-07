@@ -101,7 +101,6 @@ namespace SIM {
 				std::cout << " step ----------------------------------> " << numOfSteps << std::endl;
 				R tmp = timeStep();
 				para.dt = tmp < para.dtMax ? tmp : para.dtMax;
-				part->updateCell();
 				derived().step();
 				part->ct += para.dt;	numOfSteps++;
 				std::cout << " time --------> " << part->ct << std::endl;
@@ -118,7 +117,6 @@ namespace SIM {
 			std::cout << " step ----------------------------------> " << numOfSteps << std::endl;
 			R tmp = timeStep();
 			para.dt = tmp < para.dtMax ? tmp : para.dtMax;
-			part->updateCell();
 			derived().step();
 			part->ct += para.dt;	numOfSteps++;
 			std::cout << " time --------> " << part->ct << std::endl;

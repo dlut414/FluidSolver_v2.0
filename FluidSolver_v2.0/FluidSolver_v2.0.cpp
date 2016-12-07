@@ -65,6 +65,7 @@ static void callBack() {
 	if (control.i_sens || (outSwitchS && control.i_senSwitch)) {
 		Simulation::SensorOut();
 		outSwitchS = 0;
+		control.i_sens = 0;
 	}
 	if (control.i_bmp || (outSwitchP && control.i_bmpSwitch)) {
 		setTwVisible(GUIBar, 0);
@@ -76,6 +77,7 @@ static void callBack() {
 		bm.SaveAsPNG(name);
 		setTwVisible(GUIBar, 1);
 		outSwitchP = 0;
+		control.i_bmp = 0;
 	}
 	if (!control.i_stop) {
 		Simulation::Run();
@@ -131,7 +133,6 @@ static void onKeyboard(unsigned char key, int x, int y) {
 	if (!TwEventKeyboardGLUT(key, x, y)) {
 		glutPostRedisplay();
 		control.pressKey(key, x, y);
-		callBack();
 	}
 }
 static void onDisplay() {

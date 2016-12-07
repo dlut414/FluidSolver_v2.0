@@ -46,7 +46,9 @@ namespace SIM {
 			makeBC();
 			b2neumann();
 			b2dirichlet();
-			sen = new Sensor<R,2,Particle_x<R,2,P>>(part);
+			calCell();
+			calInvMat();
+			sen = new Sensor<R, 2, Particle_x<R, 2, P>>(part);
 			*sen << "Sensor.in";
 		}
 
@@ -67,7 +69,6 @@ namespace SIM {
 		}
 
 		void step() {
-			calInvMat();
 			VPE_q1r0();
 			PPE_q1();
 			adPres();
