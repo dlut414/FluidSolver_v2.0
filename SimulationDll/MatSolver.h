@@ -8,12 +8,9 @@
 #include <Eigen/OrderingMethods>
 #include "Header.h"
 
-#define AUGMENT (1)
-#define AG AUGMENT
-
 namespace SIM {
 
-	template <typename R, int D>
+	template <typename R, int D, int AG>
 	class MatSolver {
 		typedef Eigen::Triplet<R> Tpl;
 		typedef Eigen::Matrix<R, Eigen::Dynamic, 1> dVec;

@@ -48,6 +48,7 @@ namespace SIM {
 			calInvMat();
 			sen = new Sensor<R,2,Particle_x<R,2,P>>(part);
 			*sen << "Sensor.in";
+			mSol = new MatSolver<R, 2, 1>(int(derived().part->np), para.eps);
 		}
 
 		void makeBC() {
@@ -235,7 +236,8 @@ namespace SIM {
 		}
 
 	public:
-		Particle_x<R,2,P>* part;
+		MatSolver<R, 2, 1>* mSol;
+		Particle_x<R, 2, P>* part;
 		Sensor<R,2,Particle_x<R,2,P>>* sen;
 
 	private:

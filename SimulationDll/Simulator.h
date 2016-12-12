@@ -88,7 +88,6 @@ namespace SIM {
 		void init() {
 			*this << "Para.txt";
 			derived().init_();
-			mSol = new MatSolver<R,2>(int(derived().part->np), para.eps);
 			std::cout << " Particle number : " << derived().part->np << std::endl;
 			R tmp = timeStep();
 			para.dt = tmp < para.dtMax ? tmp : para.dtMax;
@@ -177,19 +176,18 @@ namespace SIM {
 
 	public:
 		Parameter<R, 2> para;
-		MatSolver<R, 2>* mSol;
 
 	protected:
 		void step() {}
 
 		void solveMat_p() {
 			auto* const part = derived().part;
-			mSol->biCg();
+			derived().mSol->biCg();
 #if OMP
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				part->pres[p] = mSol->x[p];
+				part->pres[p] = derived().mSol->x[p];
 				//if (part->pres[p] < -1.e5) part->pres[p] = -1.e5;
 				//if (part->pres[p] > 1.e5) part->pres[p] = 1.e5;
 			}
@@ -197,38 +195,38 @@ namespace SIM {
 
 		void solveMat_phi() {
 			auto* const part = derived().part;
-			mSol->ccBiCg_augment(part->type);
+			derived().mSol->ccBiCg_augment(part->type);
 #if OMP
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				part->phi[p] = mSol->x[p];
+				part->phi[p] = derived().mSol->x[p];
 				//if (part->phi[p] < -1.e5) part->phi[p] = -1.e5;
 				//if (part->phi[p] > 1.e5) part->phi[p] = 1.e5;
 			}
 		}
 
 		void solveMat_t() {
-			mSol->biCg();
+			derived().mSol->biCg();
 			auto* const part = derived().part;
 #if OMP
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < int(part->np); p++) {
 				part->temp_m1[p] = part->temp[p];
-				part->temp[p] = mSol->x[p];
+				part->temp[p] = derived().mSol->x[p];
 			}
 		}
 
 		void solveMat_v() {
-			mSol->biCg_v();
+			derived().mSol->biCg_v();
 			auto* const part = derived().part;
 #if OMP
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				part->vel_p1[0][p] = mSol->u[2*p];
-				part->vel_p1[1][p] = mSol->u[2*p+1];
+				part->vel_p1[0][p] = derived().mSol->u[2*p];
+				part->vel_p1[1][p] = derived().mSol->u[2*p+1];
 			}
 		}
 

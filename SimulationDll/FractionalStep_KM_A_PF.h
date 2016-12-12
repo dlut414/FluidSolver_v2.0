@@ -25,7 +25,6 @@ namespace SIM {
 	class FractionalStep_KM_A_PF<R,1,P> : public Simulator<R,1,FractionalStep_KM_A_PF<R,1,P>> {};
 
 	///inlet/outlet: pressure specified
-	/*
 	template <typename R, int P>
 	class FractionalStep_KM_A_PF<R,2,P> : public Simulator<R,2,FractionalStep_KM_A_PF<R,2,P>> {
 		typedef mMath::Polynomial_A<R,2,P> PN;
@@ -52,6 +51,7 @@ namespace SIM {
 			calInvMat();
 			sen = new Sensor<R,2,Particle_x<R,2,P>>(part);
 			*sen << "Sensor.in";
+			mSol = new MatSolver<R,2,0>(int(derived().part->np), para.eps);
 		}
 		void makeBC() {
 			for (int p = 0; p < part->np; p++) {
@@ -184,8 +184,9 @@ namespace SIM {
 		}
 
 	public:
-		Particle_x<R,2,P>* part;
-		Sensor<R,2,Particle_x<R,2,P>>* sen;
+		MatSolver<R, 2, 0>* mSol;
+		Particle_x<R, 2, P>* part;
+		Sensor<R, 2, Particle_x<R, 2, P>>* sen;
 
 	private:
 		void LHS_v_q1() {
@@ -392,8 +393,6 @@ namespace SIM {
 					mSol->b[p] = R(-0.5);
 					continue;
 				}
-				const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p);
-				mSol->b[p] = coef_local * div_local;
 				if (IS(part->bdc[p], P_NEUMANN)) {
 					if (part->type[p] == BD1) {
 						Vec& normal = part->bdnorm.at(p);
@@ -406,8 +405,13 @@ namespace SIM {
 						const R neumann = (normal[0] * part->vel_p1[0][p] + normal[1] * part->vel_p1[1][p]) / para.dt;
 						const VecP aa = part->invNeu.at(p)* inner;
 						const R cst = neumann *part->ww(R(0))* (R(1) / part->varrho) * (part->pn_lap_o.dot(aa));
-						mSol->b[p] -= cst;
+						const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p, neumann);
+						mSol->b[p] = div_local - cst;
 					}
+				}
+				else {
+					const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p);
+					mSol->b[p] = coef_local * div_local;
 				}
 			}
 		}
@@ -724,8 +728,8 @@ namespace SIM {
 		Shifter<R,2> shi;
 		std::vector<Tpl> coef;
 	};
-	*/
 	///inlet: velocity specified; outlet: fully developed flow
+/*
 	template <typename R, int P>
 	class FractionalStep_KM_A_PF<R, 2, P> : public Simulator<R, 2, FractionalStep_KM_A_PF<R, 2, P>>{
 		typedef mMath::Polynomial_A<R, 2, P> PN;
@@ -752,6 +756,7 @@ namespace SIM {
 			calInvMat();
 			sen = new Sensor<R, 2, Particle_x<R, 2, P>>(part);
 			*sen << "Sensor.in";
+			mSol = new MatSolver<R,2,1>(int(derived().part->np), para.eps);
 		}
 		void makeBC() {
 			for (int p = 0; p < part->np; p++) {
@@ -904,6 +909,7 @@ namespace SIM {
 		}
 
 	public:
+		MatSolver<R, 2, 1>* mSol;
 		Particle_x<R, 2, P>* part;
 		Sensor<R, 2, Particle_x<R, 2, P>>* sen;
 
@@ -1472,6 +1478,7 @@ namespace SIM {
 		Shifter<R, 2> shi;
 		std::vector<Tpl> coef;
 	};
+	*/
 
 	template <typename R, int P>
 	class FractionalStep_KM_A_PF<R,3,P> : public Simulator<R,3,FractionalStep_KM_A_PF<R,3,P>>  {};
