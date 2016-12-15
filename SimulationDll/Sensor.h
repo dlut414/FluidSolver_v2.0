@@ -91,7 +91,7 @@ namespace SIM {
 			while (1) {
 				Vec censorPos;
 				file >> censorPos[0] >> censorPos[1];
-				if (file.eof()) break;
+				if (file.fail()) break;
 				pos.push_back(censorPos);
 				vel.push_back(Vec::Zero());
 				pres.push_back(0.0);
