@@ -7,7 +7,7 @@ Rayleigh number
 cfl number
 0.5
 maximum dt
-5.e-3
+2.e-3
 total time
 1000.
 epsilon

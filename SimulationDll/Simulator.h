@@ -234,6 +234,7 @@ namespace SIM {
 			R umax = R(0);
 			const auto* const part = derived().part;
 			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] == BD2) continue;
 				const R ux = part->vel[0][p];
 				const R uy = part->vel[1][p];
 				const R tmp = sqrt(ux*ux + uy*uy);

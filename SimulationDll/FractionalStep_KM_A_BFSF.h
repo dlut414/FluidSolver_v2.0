@@ -75,7 +75,7 @@ namespace SIM {
 			adPres();
 
 			syncPos();
-			adVel_q1_nml();
+			adVel_q1();
 			adPos_s1();
 
 			calCell();
@@ -100,7 +100,7 @@ namespace SIM {
 
 		void VPE_q1r0() {
 			LHS_v_q1();
-			RHS_v_q1r0();
+			RHS_v_q1r0_nml();
 			solveMat_v();
 		}
 
@@ -132,52 +132,6 @@ namespace SIM {
 					part->vel_p1[0][p] += du[0];
 					part->vel_p1[1][p] += du[1];
 				}
-				else if (part->type[p] == BD1 || part->type[p] == INLET) {
-					part->vel_p1[0][p] = part->vel[0][p];
-					part->vel_p1[1][p] = part->vel[1][p];
-				}
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == OUTLET) {
-					int q = part->NearestFluid(p);
-					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
-					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
-					const Vec norm = part->bdnorm.at(p);
-					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
-					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
-					Vec Dqp;
-					Dqp[0] = part->pos[0][p] - part->pos[0][q];
-					Dqp[1] = part->pos[1][p] - part->pos[1][q];
-					part->vel_p1[0][p] = part->vel_p1[0][q] + gradX_p.dot(Dqp);
-					part->vel_p1[1][p] = part->vel_p1[1][q] + gradY_p.dot(Dqp);
-					const R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
-					if (flowRate < R(0)) {
-						std::cout << " Flow in at OUTLET ! " << std::endl;
-						std::cout << " Clamp to Zero ! " << std::endl;
-						part->vel_p1[0][p] = part->vel_p1[0][p] - flowRate * norm[0];
-						part->vel_p1[1][p] = part->vel_p1[1][p] - flowRate * norm[1];
-					}
-				}
-			}
-		}
-
-		void adVel_q1_nml() {
-			const R coef_local = para.dt;
-			const R epsilon_local = 1.e-6;
-			R inletSum = 0;
-			R outletSum = 0;
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == FLUID) {
-					const Vec du = -coef_local * part->Grad(part->phi.data(), p);
-					part->vel_p1[0][p] += du[0];
-					part->vel_p1[1][p] += du[1];
-				}
 				else if (part->type[p] == BD1) {
 					part->vel_p1[0][p] = part->vel[0][p];
 					part->vel_p1[1][p] = part->vel[1][p];
@@ -185,7 +139,6 @@ namespace SIM {
 				else if (part->type[p] == INLET) {
 					part->vel_p1[0][p] = part->vel[0][p];
 					part->vel_p1[1][p] = part->vel[1][p];
-					inletSum += -(part->vel[0][p] * part->bdnorm[p][0] + part->vel[1][p] * part->bdnorm[p][1]) * part->dp;
 				}
 			}
 #if OMP
@@ -212,19 +165,6 @@ namespace SIM {
 						part->vel_p1[1][p] = part->vel_p1[1][p] - flowRate * norm[1];
 						flowRate = 0;
 					}
-					outletSum += flowRate * part->dp;
-				}
-			}
-			int sign = (outletSum > 0) - (outletSum < 0);
-			if (sign == 0) outletSum = epsilon_local;
-			else if (abs(outletSum) < epsilon_local) outletSum = sign * epsilon_local;
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == OUTLET) {
-					part->vel_p1[0][p] = part->vel_p1[0][p] * inletSum / outletSum;
-					part->vel_p1[1][p] = part->vel_p1[1][p] * inletSum / outletSum;
 				}
 			}
 		}
@@ -298,25 +238,64 @@ namespace SIM {
 			mSol->au.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void RHS_v_q1r0() {
+		void RHS_v_q1r0_nml() {
 ///@ concept 1
 			const R coef_local = R(1) / (para.dt * para.Pr);
+			const R epsilon_local = 1.e-6;
+			R inletSum = 0;
+			R outletSum = 0;
 #if OMP
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD1 || part->type[p] == INLET || part->type[p] == OUTLET) {
+				if (part->type[p] == BD1) {
 					const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
 					mSol->rhs[2 * p + 0] = part->vel[0][p] + para.dt*(para.Pr* lap_local[0]);
 					mSol->rhs[2 * p + 1] = part->vel[1][p] + para.dt*(para.Pr* lap_local[1]);
-					continue;
 				}
-				else {
+				else if (part->type[p] == INLET) {
+					const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
+					mSol->rhs[2 * p + 0] = part->vel[0][p] + para.dt*(para.Pr* lap_local[0]);
+					mSol->rhs[2 * p + 1] = part->vel[1][p] + para.dt*(para.Pr* lap_local[1]);
+					inletSum += -(part->vel[0][p] * part->bdnorm[p][0] + part->vel[1][p] * part->bdnorm[p][1]) * part->dp;
+				}
+				else if (part->type[p] == OUTLET) {
+					int q = part->NearestFluid(p);
+					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
+					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
+					const Vec norm = part->bdnorm.at(p);
+					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
+					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
+					Vec Dqp;
+					Dqp[0] = part->pos[0][p] - part->pos[0][q];
+					Dqp[1] = part->pos[1][p] - part->pos[1][q];
+					part->vel_p1[0][p] = part->vel[0][q] + gradX_p.dot(Dqp);
+					part->vel_p1[1][p] = part->vel[1][q] + gradY_p.dot(Dqp);
+					R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
+					outletSum += flowRate * part->dp;
+				}
+				else if (part->type[p] == FLUID) {
 					const R rhsx = coef_local* part->vel[0][p];
 					const R rhsy = coef_local* part->vel[1][p];
 					mSol->rhs[2 * p + 0] = rhsx;
 					mSol->rhs[2 * p + 1] = rhsy;
-					continue;
+				}
+				else {
+					mSol->rhs[2 * p + 0] = 0;
+					mSol->rhs[2 * p + 1] = 0;
+				}
+			}
+			int sign = (outletSum > 0) - (outletSum < 0);
+			if (sign == 0) outletSum = epsilon_local;
+			else if (abs(outletSum) < epsilon_local) outletSum = sign * epsilon_local;
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] == OUTLET) {
+					//const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
+					mSol->rhs[2 * p + 0] = part->vel_p1[0][p] * inletSum / outletSum;
+					mSol->rhs[2 * p + 1] = part->vel_p1[1][p] * inletSum / outletSum;
 				}
 			}
 		}
