@@ -366,7 +366,7 @@ namespace SIM {
 						const R cst = neumann *part->ww(R(0))* (R(1) / part->varrho) * (part->pn_lap_o.dot(aa));
 						mSol->b[p] -= cst;
 					}
-					else if (part->type[p] == INLET || part->type[p] == OUTLET) {
+					else if (part->type[p] == INLET) {
 						///???
 						///neumann != 0;
 						Vec& normal = part->bdnorm.at(p);
@@ -379,6 +379,9 @@ namespace SIM {
 						const VecP aa = part->invNeu.at(p)* inner;
 						const R cst = neumann *part->ww(R(0))* (R(1) / part->varrho) * (part->pn_lap_o.dot(aa));
 						mSol->b[p] -= cst;
+					}
+					else if (part->type[p] == OUTLET) {
+						///neumann = 0;
 					}
 				}
 			}
