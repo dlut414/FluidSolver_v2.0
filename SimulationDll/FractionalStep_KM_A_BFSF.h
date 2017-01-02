@@ -285,17 +285,15 @@ namespace SIM {
 					mSol->rhs[2 * p + 1] = 0;
 				}
 			}
-			int sign = (outletSum > 0) - (outletSum < 0);
-			if (sign == 0) outletSum = epsilon_local;
-			else if (abs(outletSum) < epsilon_local) outletSum = sign * epsilon_local;
+			if (abs(outletSum) < epsilon_local) outletSum = epsilon_local;
 #if OMP
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == OUTLET) {
 					//const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
-					mSol->rhs[2 * p + 0] = part->vel_p1[0][p] * inletSum / outletSum;
-					mSol->rhs[2 * p + 1] = part->vel_p1[1][p] * inletSum / outletSum;
+					mSol->rhs[2 * p + 0] = part->vel_p1[0][p] * abs(inletSum / outletSum);
+					mSol->rhs[2 * p + 1] = part->vel_p1[1][p] * abs(inletSum / outletSum);
 				}
 			}
 		}
@@ -510,8 +508,29 @@ namespace SIM {
 				part->pos[0][id] = part->pos_m1[0][id];
 				part->pos[1][id] = part->pos_m1[1][id];
 			}
+			//for (int p = 0; p < part->np; p++) {
+			//	if (part->type[p] == OUTLET) {
+			//		const auto& cell = part->cell;
+			//		const int cx = cell->pos2cell(part->pos[0][p]);
+			//		const int cy = cell->pos2cell(part->pos[1][p]);
+			//		for (int i = 0; i < cell->blockSize::value; i++) {
+			//			const int key = cell->hash(cx, cy, i);
+			//			for (int m = 0; m < cell->linkList[key].size(); m++) {
+			//				const int q = cell->linkList[key][m];
+			//				if (part->type[q] == FLUID) {
+			//					const R dr[2] = { part->pos[0][p] - part->pos[0][q], part->pos[1][p] - part->pos[1][q] };
+			//					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+			//					if (dr1 < 0.6 * part->dp) {
+			//						rmId.push_back(q);
+			//					}
+			//				}
+			//			}
+			//		}
+			//	}
+			//}
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == OUTLET) {
+				if (part->type[p] == FLUID) {
+					int flag = 0;
 					const auto& cell = part->cell;
 					const int cx = cell->pos2cell(part->pos[0][p]);
 					const int cy = cell->pos2cell(part->pos[1][p]);
@@ -519,14 +538,16 @@ namespace SIM {
 						const int key = cell->hash(cx, cy, i);
 						for (int m = 0; m < cell->linkList[key].size(); m++) {
 							const int q = cell->linkList[key][m];
-							if (part->type[q] == FLUID) {
-								const R dr[2] = { part->pos[0][p] - part->pos[0][q], part->pos[1][p] - part->pos[1][q] };
-								const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-								if (dr1 < 0.6 * part->dp) {
-									rmId.push_back(q);
-								}
-							}
+							if (part->type[q] == OUTLET) flag = 1;
 						}
+					}
+					if (!flag) continue;
+					for (int it = 0; it < int(part->outlet.size()); it++) {
+						Vec p0;
+						p0[0] = part->pos[0][p];
+						p0[1] = part->pos[1][p];
+						const R dis = part->distance(part->outlet[it], p0);
+						if (dis <= 0.3 * part->dp) rmId.push_back(p);
 					}
 				}
 			}

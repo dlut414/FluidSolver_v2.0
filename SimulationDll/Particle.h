@@ -40,6 +40,10 @@ namespace SIM {
 		typedef Eigen::Matrix<int,2,1> iVec;
 		typedef Eigen::Matrix<R,2,1> Vec;
 		typedef Eigen::Matrix<R,2,2> Mat;
+		struct Segment {
+			Vec p1;
+			Vec p2;
+		};
 	public:
 		Particle() {}
 		~Particle() {}
@@ -96,6 +100,37 @@ namespace SIM {
 				}
 				else addPart(int(t), p, v, tp);
 			}
+			int flag = 0;
+			Vec p1, p2, p3;
+			for (int it = 0; it < np; it++) {
+				if (type[it] == OUTLET) {
+					if (!flag) {
+						p1[0] = pos[0][it];
+						p1[1] = pos[1][it];
+						p2[0] = pos[0][it];
+						p2[1] = pos[1][it];
+						flag = 1;
+					}
+					else {
+						p3[0] = pos[0][it];
+						p3[1] = pos[1][it];
+						const Vec dr = p3 - p2;
+						const R dis = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dis < 1.5* dp) {
+							p2 = p3;
+						}
+						else {
+							Segment s;
+							s.p1 = p1, s.p2 = p2;
+							outlet.push_back(s);
+							p1 = p2 = p3;
+						}
+					}
+				}
+			}
+			Segment s;
+			s.p1 = p1, s.p2 = p2;
+			outlet.push_back(s);
 			file.close();
 			std::cout << " Reading Geo.in done " << std::endl;
 		}
@@ -214,6 +249,11 @@ namespace SIM {
 		void getBBox(R& left, R& right, R& bottom, R& top) const {
 			cell->getBBox(left, right, bottom, top);
 		}
+		R distance(const Segment& s, const Vec& p0) const {
+			const Vec ds = s.p2 - s.p1;
+			const R lenth = sqrt(ds[0] * ds[0] + ds[1] * ds[1]);
+			return abs(ds[1] * p0[0] - ds[0] * p0[1] + s.p2[0] * s.p1[1] - s.p2[1] * s.p1[0]) / lenth;
+		}
 
 	public:
 		R ct;
@@ -237,6 +277,7 @@ namespace SIM {
 		std::vector<R> t_dirichlet;
 		std::vector<R> p_neumann;
 		std::vector<R> t_neumann;
+		std::vector<Segment> outlet;
 
 		LinkCell<R,2>* cell;
 	};
