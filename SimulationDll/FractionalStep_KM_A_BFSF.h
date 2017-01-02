@@ -272,6 +272,12 @@ namespace SIM {
 					part->vel_p1[0][p] = part->vel[0][q] + gradX_p.dot(Dqp);
 					part->vel_p1[1][p] = part->vel[1][q] + gradY_p.dot(Dqp);
 					R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
+					if (flowRate < 0) {
+						const Vec flow = flowRate* norm;
+						part->vel_p1[0][p] = part->vel_p1[0][p] - flow[0];
+						part->vel_p1[1][p] = part->vel_p1[1][p] - flow[1];
+						flowRate = 0;
+					}
 					outletSum += flowRate * part->dp;
 				}
 				else if (part->type[p] == FLUID) {
