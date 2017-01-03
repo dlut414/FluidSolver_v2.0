@@ -144,10 +144,10 @@ void paintRGB() {
 	else if (fType == INLET) {
 		color = vec4(1.0f, 1.0f, 0.0f, 1.0f);
 	}
-	else if (fType == OUTLET) {
-		color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
-	}
-	else if (fType == FLUID || fType == BD1) {
+	//else if (fType == OUTLET) {
+	//	color = vec4(0.0f, 1.0f, 1.0f, 1.0f);
+	//}
+	else if (fType == FLUID || fType == BD1 || fType == OUTLET) {
 		if (s_normalized >= 0.0f && s_normalized < 0.5f)
 			color = 2.0f * ((0.5f - s_normalized)* blue + s_normalized* green);
 		else if (s_normalized >= 0.5f && s_normalized < 1.0f)

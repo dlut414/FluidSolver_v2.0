@@ -1,7 +1,7 @@
 effective radius
 2.6
 Prandtl number
-0.01
+0.002
 Rayleigh number
 1.e6
 cfl number

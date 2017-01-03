@@ -18,7 +18,7 @@ namespace VIS {
 		Controller() {
 			m_mode = DMODE_ONE;
 			f_scaleVel = 0.0010f;
-			f_panVel = 0.001f;
+			f_panVel = 0.01f;
 			f_visScaleVel = 0.1f;
 
 			m_scale = m_initScale = glm::vec3(1.f);

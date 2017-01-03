@@ -61,7 +61,6 @@ namespace SIM {
 		}
 		void b2neumann() {
 			for (int p = 0; p < part->np; p++) {
-				if (IS(part->bdc[p], P_NEUMANN)) part->p_neumann[p] = R(0);
 			}
 		}
 		void b2dirichlet() {
@@ -141,32 +140,32 @@ namespace SIM {
 					part->vel_p1[1][p] = part->vel[1][p];
 				}
 			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == OUTLET) {
-					int q = part->NearestFluid(p);
-					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
-					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
-					const Vec norm = part->bdnorm.at(p);
-					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
-					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
-					Vec Dqp;
-					Dqp[0] = part->pos[0][p] - part->pos[0][q];
-					Dqp[1] = part->pos[1][p] - part->pos[1][q];
-					part->vel_p1[0][p] = part->vel_p1[0][q] + gradX_p.dot(Dqp);
-					part->vel_p1[1][p] = part->vel_p1[1][q] + gradY_p.dot(Dqp);
-					R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
-					if (flowRate < R(0)) {
-						std::cout << " Flow in at OUTLET ! " << std::endl;
-						std::cout << " Clamp to Zero ! " << std::endl;
-						part->vel_p1[0][p] = part->vel_p1[0][p] - flowRate * norm[0];
-						part->vel_p1[1][p] = part->vel_p1[1][p] - flowRate * norm[1];
-						flowRate = 0;
-					}
-				}
-			}
+//#if OMP
+//#pragma omp parallel for
+//#endif
+//			for (int p = 0; p < part->np; p++) {
+//				if (part->type[p] == OUTLET) {
+//					int q = part->NearestFluid(p);
+//					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
+//					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
+//					const Vec norm = part->bdnorm.at(p);
+//					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
+//					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
+//					Vec Dqp;
+//					Dqp[0] = part->pos[0][p] - part->pos[0][q];
+//					Dqp[1] = part->pos[1][p] - part->pos[1][q];
+//					part->vel_p1[0][p] = part->vel_p1[0][q] + gradX_p.dot(Dqp);
+//					part->vel_p1[1][p] = part->vel_p1[1][q] + gradY_p.dot(Dqp);
+//					R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
+//					if (flowRate < R(0)) {
+//						std::cout << " Flow in at OUTLET ! " << std::endl;
+//						std::cout << " Clamp to Zero ! " << std::endl;
+//						part->vel_p1[0][p] = part->vel_p1[0][p] - flowRate * norm[0];
+//						part->vel_p1[1][p] = part->vel_p1[1][p] - flowRate * norm[1];
+//						flowRate = 0;
+//					}
+//				}
+//			}
 		}
 		
 		void adPos_s1() {
@@ -273,10 +272,9 @@ namespace SIM {
 					part->vel_p1[1][p] = part->vel[1][q] + gradY_p.dot(Dqp);
 					R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
 					if (flowRate < 0) {
-						const Vec flow = flowRate* norm;
-						part->vel_p1[0][p] = part->vel_p1[0][p] - flow[0];
-						part->vel_p1[1][p] = part->vel_p1[1][p] - flow[1];
-						flowRate = 0;
+						std::cout << " minus flowRate " << std::endl;
+						PRINT(p);
+						PRINT(flowRate);
 					}
 					outletSum += flowRate * part->dp;
 				}
