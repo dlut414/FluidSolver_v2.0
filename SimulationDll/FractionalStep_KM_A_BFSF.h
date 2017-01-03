@@ -32,12 +32,14 @@ namespace SIM {
 		typedef Eigen::Matrix<R,2,1> Vec;
 		typedef Eigen::Matrix<R,PN::value,PN::value> MatPP;
 		typedef Eigen::Triplet<R> Tpl;
+		typedef MatSolver<R,2,0> Solver;
+		typedef Particle_x<R,2,P> PartX;
 	public:
 		FractionalStep_KM_A_BFSF() {}
 		~FractionalStep_KM_A_BFSF() {}
 
 		void init_() {
-			part = new Particle_x<R,2,P>();
+			part = new PartX();
 			part->clean();
 			*part << "Geo.in";
 			part->init(para.k);
@@ -48,15 +50,15 @@ namespace SIM {
 			b2dirichlet();
 			calCell();
 			calInvMat();
-			sen = new Sensor<R, 2, Particle_x<R, 2, P>>(part);
+			sen = new Sensor<R, 2, PartX>(part);
 			*sen << "Sensor.in";
-			mSol = new MatSolver<R, 2, 1>(int(derived().part->np), para.eps);
+			mSol = new Solver(int(derived().part->np), para.eps);
 		}
 
 		void makeBC() {
 			for (int p = 0; p < part->np; p++) {
 				part->bdc[p] = 0;
-				if (part->type[p] == BD1 || part->type[p] == INLET || part->type[p] == OUTLET) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
+				if (part->type[p] == BD1 || part->type[p] == INLET/* || part->type[p] == OUTLET*/) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
 			}
 		}
 		void b2neumann() {
@@ -71,7 +73,7 @@ namespace SIM {
 		void step() {
 			VPE_q1r0();
 			PPE_q1();
-			adPres();
+			//adPres();
 
 			syncPos();
 			adVel_q1();
@@ -106,7 +108,7 @@ namespace SIM {
 		void PPE_q1() {
 			LHS_p();
 			RHS_p_q1();
-			solveMat_phi();
+			solveMat_p();
 		}
 
 		void adPres() {
@@ -127,7 +129,7 @@ namespace SIM {
 #endif
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == FLUID) {
-					const Vec du = -coef_local * part->Grad(part->phi.data(), p);
+					const Vec du = -coef_local * part->Grad(part->pres.data(), p);
 					part->vel_p1[0][p] += du[0];
 					part->vel_p1[1][p] += du[1];
 				}
@@ -192,8 +194,8 @@ namespace SIM {
 		}
 
 	public:
-		MatSolver<R, 2, 1>* mSol;
-		Particle_x<R, 2, P>* part;
+		Solver* mSol;
+		PartX* part;
 		Sensor<R,2,Particle_x<R,2,P>>* sen;
 
 	private:
@@ -305,7 +307,7 @@ namespace SIM {
 		void LHS_p() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2) {
+				if (part->type[p] == BD2 || part->type[p] == OUTLET) {
 					coef.push_back(Tpl(p, p, R(1)));
 					continue;
 				}
@@ -352,6 +354,16 @@ namespace SIM {
 					mSol->b[p] = R(0);
 					continue;
 				}
+				else if (part->type[p] == OUTLET) {
+					///Dirichlet condition by extrapolation
+					int q = part->NearestFluid(p);
+					const Vec grad = part->Grad(part->pres.data(), q);
+					Vec Dqp;
+					Dqp[0] = part->pos[0][p] - part->pos[0][q];
+					Dqp[1] = part->pos[1][p] - part->pos[1][q];
+					mSol->b[p] = part->pres[q] + grad.dot(Dqp);
+					continue;
+				}
 				const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p);
 				mSol->b[p] = coef_local * div_local;
 				if (IS(part->bdc[p], P_NEUMANN)) {
@@ -382,9 +394,9 @@ namespace SIM {
 						const R cst = neumann *part->ww(R(0))* (R(1) / part->varrho) * (part->pn_lap_o.dot(aa));
 						mSol->b[p] -= cst;
 					}
-					else if (part->type[p] == OUTLET) {
-						///neumann = 0;
-					}
+					//else if (part->type[p] == OUTLET) {
+					//	///neumann = 0;
+					//}
 				}
 			}
 		}
