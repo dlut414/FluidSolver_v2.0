@@ -156,6 +156,41 @@ namespace SIM {
 			return (pn_p_o * aa);
 		}
 
+		const Vec Grad(const R* const phi, const int& p, const int& mask) const {
+			MatPP mm = MatPP::Zero();
+			VecP vv = VecP::Zero();
+			const int cx = cell->pos2cell(pos[0][p]);
+			const int cy = cell->pos2cell(pos[1][p]);
+			for (int i = 0; i < cell->blockSize::value; i++) {
+				const int key = cell->hash(cx, cy, i);
+				for (int m = 0; m < cell->linkList[key].size(); m++) {
+					const int q = cell->linkList[key][m];
+					if (type[q] & mask) {
+						const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						if (dr1 > r0) continue;
+						const R w = ww(dr1);
+						VecP npq;
+						poly(dr, npq.data());
+						vv += (w * (phi[q] - phi[p])) * npq;
+						mm += (w* npq) * npq.transpose();
+					}
+				}
+			}
+			MatPP inv = MatPP::Zero();
+			if (abs(mm.determinant()) < eps_mat) {
+#if DEBUG
+				std::cout << " Determinant defficiency: "; PRINT(p);
+#endif
+				auto mm_ = mm.block<2, 2>(0, 0);
+				if (abs(mm_.determinant()) < eps_mat) inv = MatPP::Zero();
+				else inv.block<2, 2>(0, 0) = mm_.inverse();
+			}
+			else inv = mm.inverse();
+			const VecP aa = inv * vv;
+			return (pn_p_o * aa);
+		}
+
 		const R Div(const R* const phix, const R* const phiy, const int& p) const {
 			VecP vvx = VecP::Zero();
 			VecP vvy = VecP::Zero();

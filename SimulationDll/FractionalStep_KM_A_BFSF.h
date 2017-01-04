@@ -262,8 +262,8 @@ namespace SIM {
 				}
 				else if (part->type[p] == OUTLET) {
 					int q = part->NearestFluid(p);
-					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
-					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
+					const Vec gradX_q = part->Grad(part->vel[0].data(), q, FLUID|BD1);
+					const Vec gradY_q = part->Grad(part->vel[1].data(), q, FLUID|BD1);
 					const Vec norm = part->bdnorm.at(p);
 					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
 					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
@@ -356,12 +356,13 @@ namespace SIM {
 				}
 				else if (part->type[p] == OUTLET) {
 					///Dirichlet condition by extrapolation
-					int q = part->NearestFluid(p);
-					const Vec grad = part->Grad(part->pres.data(), q);
-					Vec Dqp;
-					Dqp[0] = part->pos[0][p] - part->pos[0][q];
-					Dqp[1] = part->pos[1][p] - part->pos[1][q];
-					mSol->b[p] = part->pres[q] + grad.dot(Dqp);
+					//int q = part->NearestFluid(p);
+					//const Vec grad = part->Grad(part->pres.data(), q, FLUID|BD1);
+					//Vec Dqp;
+					//Dqp[0] = part->pos[0][p] - part->pos[0][q];
+					//Dqp[1] = part->pos[1][p] - part->pos[1][q];
+					//mSol->b[p] = part->pres[q] + grad.dot(Dqp);
+					mSol->b[p] = R(0);
 					continue;
 				}
 				const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p);
