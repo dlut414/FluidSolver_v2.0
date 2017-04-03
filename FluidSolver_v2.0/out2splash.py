@@ -1,4 +1,5 @@
 name = "26"
+k=2.6;
 with open(name, mode='w') as fw:
     with open(name+".out", mode='r') as fr:
         time=float(fr.readline().split()[0])
@@ -11,4 +12,4 @@ with open(name, mode='w') as fw:
             y=line.split()[2]
             u=line.split()[3]
             v=line.split()[4]
-            fw.write(x+" "+y+" "+t+" "+u+" "+v+" 0 0 0 1.0 1.0 "+str(float(dp*3.1/2.0))+"\n")
+            fw.write(x+" "+y+" "+t+" "+u+" "+v+" 0 0 0 1.0 1.0 "+str(float(dp*k/2.0))+"\n")
