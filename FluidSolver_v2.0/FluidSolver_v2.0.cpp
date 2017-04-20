@@ -177,7 +177,9 @@ static void Initialize(int argc, char** argv) {
 	Simulation::Initialize();
 	double left, right, bottom, top;
 	Simulation::BBox(left, right, bottom, top);
-	control.u_height = GLuint(control.u_width / (right - left) * (top - bottom));
+	double whRatio = (right - left) / (top - bottom);
+	control.u_height = GLuint(control.u_width / whRatio) < control.u_height_max ? GLuint(control.u_width / whRatio) : control.u_height_max;
+	control.u_width = GLuint(control.u_width / whRatio) < control.u_height_max ? control.u_width : GLuint(control.u_height_max * whRatio);
 	control.setProjectionOR(float(left), float(right), float(bottom), float(top));
 
 	glutInit(&argc, argv);

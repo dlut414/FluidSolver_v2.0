@@ -45,6 +45,8 @@ namespace VIS {
 			i_bmpSwitch = 1;
 			u_width = 1800;
 			u_height = 250;
+			u_width_max = 1800;
+			u_height_max = 1000;
 			f_sRangeMax = 1.0f;
 			f_sRangeMin = -1.0f;
 
@@ -176,6 +178,8 @@ namespace VIS {
 		GLfloat     f_far;
 		GLuint      u_width;
 		GLuint      u_height;
+		GLuint		u_width_max;
+		GLuint		u_height_max;
 
 		int			i_init;
 		int			i_dirty;
