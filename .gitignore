@@ -56,3 +56,5 @@ out
 *.filters
 Geo.in
 Sensor.in
+*.in
+*.suo
