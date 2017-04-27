@@ -42,6 +42,11 @@ static void Render() {
 	case VIS::DMODE_FIVE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::VelocityY());
 		break;
+	case VIS::DMODE_SIX:
+		if (control.i_stop) {
+			Visualization::Run_stream(&control, Simulation::Interpolation);
+		}
+		break;
 	default:
 		break;
 	}
@@ -200,8 +205,8 @@ static void Initialize(int argc, char** argv) {
 	TwWindowSize(control.u_width, control.u_height);
 	GUIBar = TwNewBar("GUI");
 	TwDefine(" GUI size='180 300' ");
-	TwEnumVal ev[] = { { VIS::DMODE_ONE, "Vorticity" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, };
-	TwType quantity = TwDefineEnum("quantity", ev, 5);
+	TwEnumVal ev[] = { { VIS::DMODE_ONE, "Vorticity" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, { VIS::DMODE_SIX, "Streamline" } };
+	TwType quantity = TwDefineEnum("quantity", ev, 6);
 	TwAddVarRW(GUIBar, "Quantity", quantity, &control.m_mode, " group='Display' ");
 	TwAddVarRW(GUIBar, "Min", TW_TYPE_FLOAT, &control.f_sRangeMin, " group='Range' ");
 	TwAddVarRW(GUIBar, "Max", TW_TYPE_FLOAT, &control.f_sRangeMax, " group='Range' ");

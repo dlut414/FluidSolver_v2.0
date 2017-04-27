@@ -25,6 +25,7 @@ namespace VIS {
 		static VISUALIZATIONDLL_API void Run(const Controller* const controlPtr, const int& dim, const int& num, NPtr tp, NPtr pos, NPtr s);
 		static VISUALIZATIONDLL_API void Run(const Controller* const controlPtr, const int& num, NPtr tp, NPtr posX, NPtr posY, NPtr s);
 		static VISUALIZATIONDLL_API int IntersectColorPick(const Controller* const controlPtr, const int& num, const GLuint& mouseX, const GLuint& mouseY);
+		static VISUALIZATIONDLL_API void Run_stream(const Controller* const controlPtr, void(*interp)(const double, const double, double&, double&));
 		static VISUALIZATIONDLL_API void Finalize();
 	};
 

@@ -5,12 +5,14 @@
 #include "VisualizationDll.h"
 #include "Header.h"
 #include "DrawParticle.h"
+#include "DrawStreamline.h"
 #include <PreInformation.h>
 
 namespace VIS {
 	
-	typedef DrawParticle<Parameters::DataType> DP;
-	typedef DrawParticle<Parameters::DataType>* DPPtr;
+	typedef Parameters::DataType Type;
+	typedef DrawParticle<Type> DP;
+	typedef DrawParticle<Type>* DPPtr;
 
 	DrawParticle<Parameters::DataType>* drawer;
 
@@ -43,6 +45,12 @@ namespace VIS {
 
 	int VisualizationDll::IntersectColorPick(const Controller* const controlPtr, const int& num, const GLuint& mouseX, const GLuint& mouseY) {
 		return drawer->IntersectColorPick(controlPtr, num, mouseX, mouseY);
+	}
+	void VisualizationDll::Run_stream(const Controller* const controlPtr, void(*interp)(const Type, const Type, Type&, Type&)) {
+		DrawStreamline<Type>* drawer_stream = new DrawStreamline<Type>;
+		std::vector<std::vector<Type>> linex, liney;
+		drawer_stream->makeStreamline(linex, liney, interp);
+		drawer_stream->Draw(controlPtr, linex, liney);
 	}
 
 	void VisualizationDll::Finalize() {
