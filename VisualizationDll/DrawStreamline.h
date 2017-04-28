@@ -25,23 +25,24 @@ namespace VIS {
 		~DrawStreamline() {}
 
 		template <typename V>
-		void makeStreamline(std::vector<std::vector<V>>& linex, std::vector<std::vector<V>>& liney, void(*interp)(const V, const V, V&, V&)) const {
-			V px, py, qx, qy;
-			int nLine;
-			V res, sLength;
-			std::cout << " Specify 2 points of endpoints of a integration line (px, py, qx, qy): " << std::endl;
-			std::cin >> px >> py >> qx >> qy;
-			std::cout << " Specify the number of streamlines (nLine): " << std::endl;
-			std::cin >> nLine;
-			std::cout << " Specify resolution/length of lines (res): " << std::endl;
-			std::cin >> res;
-			std::cout << " Specify length of streamlines: " << std::endl;
-			std::cin >> sLength;
-			V dx = (qx - px) / (nLine + 1), dy = (qy - py) / (nLine + 1);
+		void makeStreamline(const Controller* const controlPtr, void(*interp)(const V, const V, V&, V&)) {
+			//V px, py, qx, qy;
+			//int nLine;
+			//V res, sLength;
+			//std::cout << " Specify 2 points of endpoints of a integration line (px, py, qx, qy): " << std::endl;
+			//std::cin >> px >> py >> qx >> qy;
+			//std::cout << " Specify the number of streamlines (nLine): " << std::endl;
+			//std::cin >> nLine;
+			//std::cout << " Specify resolution/length of lines (res): " << std::endl;
+			//std::cin >> res;
+			//std::cout << " Specify length of streamlines: " << std::endl;
+			//std::cin >> sLength;
 			linex.clear();
 			liney.clear();
-			for (int i = 1; i <= nLine; i++) {
-				V startx = px + dx*i, starty = py + dy*i;
+			V dx = (controlPtr->v_p2.x - controlPtr->v_p1.x) / (controlPtr->i_nLines + 1);
+			V dy = (controlPtr->v_p2.y - controlPtr->v_p1.y) / (controlPtr->i_nLines + 1);
+			for (int i = 1; i <= controlPtr->i_nLines; i++) {
+				V startx = controlPtr->v_p1.x + dx*i, starty = controlPtr->v_p1.y + dy*i;
 				V forwardVel[2];
 				interp(startx, starty, forwardVel[0], forwardVel[1]);
 				V backwardVel[2] = { forwardVel[0], forwardVel[1] };
@@ -53,12 +54,13 @@ namespace VIS {
 				std::vector<V> forwardLines_y; forwardLines_y.push_back(starty);
 				linex.push_back(forwardLines_x);
 				liney.push_back(forwardLines_y);
-				while (velmag > EPS && length <= sLength) {
-					forwardx += res*forwardVel[0]; forwardy += res*forwardVel[1];
+				while (velmag > EPS && length <= controlPtr->f_sLength) {
+					forwardx += controlPtr->f_dStep*forwardVel[0];
+					forwardy += controlPtr->f_dStep*forwardVel[1];
 					linex[2*i - 2].push_back(forwardx);
 					liney[2*i - 2].push_back(forwardy);
 					velmag = sqrt(forwardVel[0] * forwardVel[0] + forwardVel[1] * forwardVel[1]);
-					length += res * velmag;
+					length += controlPtr->f_dStep * velmag;
 					interp(forwardx, forwardy, forwardVel[0], forwardVel[1]);
 				}
 				std::vector<V> backwardLines_x; backwardLines_x.push_back(startx);
@@ -67,18 +69,18 @@ namespace VIS {
 				liney.push_back(backwardLines_y);
 				length = 0;
 				velmag = sqrt(backwardVel[0] * backwardVel[0] + backwardVel[1] * backwardVel[1]);
-				while (velmag > EPS && length <= sLength) {
-					backwardx -= res*backwardVel[0]; backwardy -= res*backwardVel[1];
+				while (velmag > EPS && length <= controlPtr->f_sLength) {
+					backwardx -= controlPtr->f_dStep*backwardVel[0];
+					backwardy -= controlPtr->f_dStep*backwardVel[1];
 					linex[2*i - 1].push_back(backwardx);
 					liney[2*i - 1].push_back(backwardy);
 					velmag = sqrt(backwardVel[0] * backwardVel[0] + backwardVel[1] * backwardVel[1]);
-					length += res * velmag;
+					length += controlPtr->f_dStep * velmag;
 					interp(backwardx, backwardy, backwardVel[0], backwardVel[1]);
 				}
 			}
 		}
-		template <typename V>
-		void Draw(const Controller* const controlPtr, std::vector<std::vector<V>>& linex, std::vector<std::vector<V>>& liney) const {
+		void Draw(const Controller* const controlPtr) const {
 			///clear framebuffer
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) printf("fbo_def not ready\n");
@@ -147,6 +149,9 @@ namespace VIS {
 		void* volData;
 		void* cellInFluid;
 
+		std::vector<std::vector<R>> linex;
+		std::vector<std::vector<R>> liney;
+
 	private:
 		void init() {
 			Draw_::initVAO(Draw_::vao);
@@ -157,6 +162,8 @@ namespace VIS {
 			Draw_::initVBO(Draw_::vbo[4]);
 			Draw_::initVBO(Draw_::vbo[5]);
 			initShader();
+			linex.clear();
+			liney.clear();
 		}
 		void initShader() {
 			shaderObj.programID.push_back(shaderObj.LoadShader_inline(vertex_stream, fragment_stream));

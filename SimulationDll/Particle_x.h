@@ -297,6 +297,7 @@ namespace SIM {
 
 		const R interpolateLSA(const R* const phi, const R& px, const R& py) const {
 			int p = -1;
+			R dp2_min = 2 * 2 * dp*dp;
 			R dis2 = std::numeric_limits<R>::max();
 			const int cx = cell->pos2cell(px);
 			const int cy = cell->pos2cell(py);
@@ -316,12 +317,13 @@ namespace SIM {
 					}
 				}
 			}
-			if (p == -1) return R(0);
+			if (p == -1 || type[p] == BD2 || dis2 > dp2_min) return R(0);
 			return interpolateLSA(phi, p, px, py);
 		}
 
 		const Vec interpolateLSA(const R* const phix, const R* const phiy, const R& px, const R& py) const {
 			int p = -1;
+			R dp2_min = 2 * 2 * dp*dp;
 			R dis2 = std::numeric_limits<R>::max();
 			const int cx = cell->pos2cell(px);
 			const int cy = cell->pos2cell(py);
@@ -329,19 +331,17 @@ namespace SIM {
 				const int key = cell->hash(cx, cy, i);
 				for (int m = 0; m < cell->linkList[key].size(); m++) {
 					const int q = cell->linkList[key][m];
-					if (type[q] != BD2) {
-						const R dr[2] = { pos[0][q] - px, pos[1][q] - py };
-						const R dr2 = (dr[0] * dr[0] + dr[1] * dr[1]);
-						const R dr1 = sqrt(dr2);
-						if (dr1 > r0) continue;
-						if (dr2 < dis2) {
-							dis2 = dr2;
-							p = q;
-						}
+					const R dr[2] = { pos[0][q] - px, pos[1][q] - py };
+					const R dr2 = (dr[0] * dr[0] + dr[1] * dr[1]);
+					const R dr1 = sqrt(dr2);
+					if (dr1 > r0) continue;
+					if (dr2 < dis2) {
+						dis2 = dr2;
+						p = q;
 					}
 				}
 			}
-			if (p == -1) return Vec::Zero();
+			if (p == -1 || type[p]== BD2 || dis2 > dp2_min) return Vec::Zero();
 			return interpolateLSA(phix, phiy, p, px, py);
 		}
 
