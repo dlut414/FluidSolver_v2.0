@@ -31,24 +31,30 @@ static void Render() {
 	switch (control.m_mode) {
 	case VIS::DMODE_ONE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Vorticity());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_TWO:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Divergence());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_THREE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Pressure());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_FOUR:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::VelocityX());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_FIVE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::VelocityY());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_SIX:
 		setTwVisible(StreamBar, 1);
 		Visualization::Run_stream(&control, 0, Simulation::Interpolation);
 		break;
 	default:
+		setTwVisible(StreamBar, 0);
 		break;
 	}
 }
@@ -74,6 +80,7 @@ static void callBack() {
 	if (control.i_bmp || (outSwitchP && control.i_bmpSwitch)) {
 		setTwVisible(GUIBar, 0);
 		setTwVisible(StreamBar, 0);
+		Render();
 		static Bitmap bm;
 		static int i = 0;
 		char name[256];
@@ -128,11 +135,13 @@ static void onMouseWheel(int button, int dir, int x, int y) {
 	control.rollMouse(button, dir, x, y);
 }
 static void onReshape(int width, int height) {
-	glViewport(0, 0, width, width);
+	glViewport(0, 0, width, height);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluPerspective(-90.0f, float(control.u_width) / float(control.u_height), 1.0f, 100.0f);
-	control.reshapeWindow();
+	double left, right, bottom, top;
+	Simulation::BBox(left, right, bottom, top);
+	control.reshapeWindow(width, height, float(left), float(right), float(bottom), float(top));
+	//gluPerspective(-90.0f, float(control.u_width) / float(control.u_height), 1.0f, 100.0f);
 	TwWindowSize(control.u_width, control.u_height);
 }
 static void onKeyboard(unsigned char key, int x, int y) {

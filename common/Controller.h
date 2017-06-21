@@ -122,7 +122,9 @@ namespace VIS {
 			i_dirty = 1;
 		}
 
-		void reshapeWindow() {
+		void reshapeWindow(GLuint width, GLuint height, float left, float right, float bottom, float top) {
+			u_width = width, u_height = height;
+			setProjectionOR(left, right, bottom, top);
 			i_dirty = 1;
 		}
 
