@@ -68,6 +68,12 @@ namespace SIM {
 	void SimulationDll2D::BBox(double& left, double& right, double& bottom, double& top) {
 		objPtr->part->getBBox(left, right, bottom, top);
 	}
+	void SimulationDll2D::Interpolation(const double x, const double y, double& u, double& v) {
+		const auto* const part = objPtr->part;
+		Eigen::Matrix<double, 2, 1> uv = part->interpolateLSA(part->vel[0].data(), part->vel[1].data(), x, y);
+		u = uv[0];
+		v = uv[1];
+	}
 
 }
 

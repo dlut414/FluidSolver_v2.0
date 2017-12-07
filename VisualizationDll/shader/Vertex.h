@@ -70,6 +70,28 @@ void main() {
 
 );
 
+const GLchar* vertex_stream = GLSL(330 core,
+
+uniform mat4 vMvp;
+uniform mat4 vModelMat;
+uniform mat4 vViewMat;
+uniform mat4 vProjectionMat;
+
+layout(location = 0) in float vPosX;
+layout(location = 1) in float vPosY;
+
+out vec4 fPos;
+
+void main() {
+	vec3 pos = vec3(vPosX, vPosY, 0.0f);
+	fPos = vMvp * vec4(pos, 1.0f);
+
+	gl_Position = fPos;
+	gl_PointSize = 2.0f;
+}
+
+);
+
 #define GLSL(version, shader)  "#version " #version "\n" #shader
 
 const GLchar* vertex_colorPick = GLSL(330 core,

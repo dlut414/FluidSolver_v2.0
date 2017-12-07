@@ -23,34 +23,44 @@ typedef SIM::SimulationDll2D Simulation;
 
 static VIS::Controller control;
 static TwBar* GUIBar;
+static TwBar* StreamBar;
+static void setTwVisible(TwBar* const bar, const int visible);
 
 static void Render() {
 	//Visualization::Run(&control, Parameters::Dimension, Simulation::Number(), Simulation::Type(), Simulation::Position(), Simulation::Scalar());
 	switch (control.m_mode) {
 	case VIS::DMODE_ONE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Vorticity());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_TWO:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Divergence());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_THREE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Pressure());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_FOUR:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::VelocityX());
+		setTwVisible(StreamBar, 0);
 		break;
 	case VIS::DMODE_FIVE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::VelocityY());
+		setTwVisible(StreamBar, 0);
+		break;
+	case VIS::DMODE_SIX:
+		setTwVisible(StreamBar, 1);
+		Visualization::Run_stream(&control, 0, Simulation::Interpolation);
 		break;
 	default:
+		setTwVisible(StreamBar, 0);
 		break;
 	}
 }
 
 static void setTwVisible(TwBar* const bar, const int visible) {
-	TwSetParam(GUIBar, NULL, "visible", TW_PARAM_INT32, 1, &visible);
-	Render();
-	glutSwapBuffers();
+	TwSetParam(bar, NULL, "visible", TW_PARAM_INT32, 1, &visible);
 }
 
 static void callBack() {
@@ -69,6 +79,8 @@ static void callBack() {
 	}
 	if (control.i_bmp || (outSwitchP && control.i_bmpSwitch)) {
 		setTwVisible(GUIBar, 0);
+		setTwVisible(StreamBar, 0);
+		Render();
 		static Bitmap bm;
 		static int i = 0;
 		char name[256];
@@ -76,6 +88,7 @@ static void callBack() {
 		//bm.SaveAsBMP(name);
 		bm.SaveAsPNG(name);
 		setTwVisible(GUIBar, 1);
+		setTwVisible(StreamBar, 1);
 		outSwitchP = 0;
 		control.i_bmp = 0;
 	}
@@ -122,11 +135,13 @@ static void onMouseWheel(int button, int dir, int x, int y) {
 	control.rollMouse(button, dir, x, y);
 }
 static void onReshape(int width, int height) {
-	glViewport(0, 0, width, width);
+	glViewport(0, 0, width, height);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	gluPerspective(-90.0f, float(control.u_width) / float(control.u_height), 1.0f, 100.0f);
-	control.reshapeWindow();
+	double left, right, bottom, top;
+	Simulation::BBox(left, right, bottom, top);
+	control.reshapeWindow(width, height, float(left), float(right), float(bottom), float(top));
+	//gluPerspective(-90.0f, float(control.u_width) / float(control.u_height), 1.0f, 100.0f);
 	TwWindowSize(control.u_width, control.u_height);
 }
 static void onKeyboard(unsigned char key, int x, int y) {
@@ -162,6 +177,10 @@ static void onDisplay() {
 	}
 }
 
+static void onIdle() {
+	return;
+}
+
 void TW_CALL ButtonRun_callback(void*) {
 	if (control.i_stop) {
 		TwDefine(" GUI/RunStop label='Stop' ");
@@ -171,6 +190,13 @@ void TW_CALL ButtonRun_callback(void*) {
 	}
 	control.i_stop = !control.i_stop;
 	TwDraw();
+}
+
+void TW_CALL ButtonRenderStream_callback(void*) {
+	Visualization::Run_stream(&control, 1, Simulation::Interpolation);
+	TwDraw();
+	glutSwapBuffers();
+	glutReportErrors();
 }
 
 static void Initialize(int argc, char** argv) {
@@ -193,15 +219,16 @@ static void Initialize(int argc, char** argv) {
 	glutReshapeFunc(onReshape);
 	glutKeyboardFunc(onKeyboard);
 	glutDisplayFunc(onDisplay);
+	glutIdleFunc(onIdle);
 
 	Visualization::Initialize();
 
 	TwInit(TW_OPENGL, NULL);
 	TwWindowSize(control.u_width, control.u_height);
 	GUIBar = TwNewBar("GUI");
-	TwDefine(" GUI size='180 300' ");
-	TwEnumVal ev[] = { { VIS::DMODE_ONE, "Vorticity" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, };
-	TwType quantity = TwDefineEnum("quantity", ev, 5);
+	TwDefine(" GUI size='180 300' position='0 0' ");
+	TwEnumVal ev[] = { { VIS::DMODE_ONE, "Vorticity" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, { VIS::DMODE_SIX, "Streamline" } };
+	TwType quantity = TwDefineEnum("quantity", ev, 6);
 	TwAddVarRW(GUIBar, "Quantity", quantity, &control.m_mode, " group='Display' ");
 	TwAddVarRW(GUIBar, "Min", TW_TYPE_FLOAT, &control.f_sRangeMin, " group='Range' ");
 	TwAddVarRW(GUIBar, "Max", TW_TYPE_FLOAT, &control.f_sRangeMax, " group='Range' ");
@@ -211,6 +238,18 @@ static void Initialize(int argc, char** argv) {
 	TwAddVarRW(GUIBar, "Sensors", onoff, &control.i_senSwitch, " group='Output' ");
 	TwAddVarRW(GUIBar, "Snapshot", onoff, &control.i_bmpSwitch, " group='Output' ");
 	TwAddButton(GUIBar, "RunStop", ButtonRun_callback, NULL, " label='Run' ");
+
+	StreamBar = TwNewBar("Streamline");
+	TwDefine(" Streamline size='250 200' position='180 0' ");
+	TwAddVarRW(StreamBar, "Px", TW_TYPE_FLOAT, &control.v_p1.x, " group='P1' ");
+	TwAddVarRW(StreamBar, "Py", TW_TYPE_FLOAT, &control.v_p1.y, " group='P1' ");
+	TwAddVarRW(StreamBar, "Qx", TW_TYPE_FLOAT, &control.v_p2.x, " group='P2' ");
+	TwAddVarRW(StreamBar, "Qy", TW_TYPE_FLOAT, &control.v_p2.y, " group='P2' ");
+	TwAddVarRW(StreamBar, "# of streamlines", TW_TYPE_INT32, &control.i_nLines, "  ");
+	TwAddVarRW(StreamBar, "Integration step size", TW_TYPE_FLOAT, &control.f_dStep, "  ");
+	TwAddVarRW(StreamBar, "Streamline length", TW_TYPE_FLOAT, &control.f_sLength, "  ");
+	TwAddButton(StreamBar, "Render", ButtonRenderStream_callback, NULL, " label='Render' ");
+	setTwVisible(StreamBar, 0);
 }
 
 static void Run() {

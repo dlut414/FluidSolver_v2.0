@@ -9,7 +9,6 @@
 ///defination of class Camera
 #pragma once
 #include "Header.h"
-
 namespace VIS {
 
 	class Camera {

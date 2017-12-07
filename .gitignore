@@ -58,3 +58,5 @@ Geo.in
 Sensor.in
 *.in
 *.suo
+*.vcxproj
+Debug

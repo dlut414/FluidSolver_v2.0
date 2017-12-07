@@ -49,6 +49,12 @@ namespace VIS {
 			u_height_max = 1000;
 			f_sRangeMax = 1.0f;
 			f_sRangeMin = -1.0f;
+			
+			v_p1 = glm::vec2(0, 0);
+			v_p2 = glm::vec2(0, 0);
+			i_nLines = 0;
+			f_dStep = 0.01f;
+			f_sLength = 10;
 
 			m_camera.SetPosition(m_initCameraPosition);
 			//m_camera.SetProjectionRH(45.0f, float(u_width)/float(u_height), f_near, f_far);
@@ -116,7 +122,9 @@ namespace VIS {
 			i_dirty = 1;
 		}
 
-		void reshapeWindow() {
+		void reshapeWindow(GLuint width, GLuint height, float left, float right, float bottom, float top) {
+			u_width = width, u_height = height;
+			setProjectionOR(left, right, bottom, top);
 			i_dirty = 1;
 		}
 
@@ -180,6 +188,8 @@ namespace VIS {
 		GLuint      u_height;
 		GLuint		u_width_max;
 		GLuint		u_height_max;
+		glm::vec2	v_p1;
+		glm::vec2	v_p2;
 
 		int			i_init;
 		int			i_dirty;
@@ -193,9 +203,12 @@ namespace VIS {
 		int			i_bmpSwitch;
 		int         i_mouseButton;
 		int         i_file;
+		int			i_nLines;
 
 		float		f_sRangeMax;
 		float		f_sRangeMin;
+		float		f_dStep;
+		float		f_sLength;
 
 	private:
 		float       f_scaleVel;

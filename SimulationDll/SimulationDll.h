@@ -35,6 +35,7 @@ namespace SIM {
 		static SIMULATIONDLL_API void SaveData();
 		static SIMULATIONDLL_API void SensorOut();
 		static SIMULATIONDLL_API void BBox(double&, double&, double&, double&);
+		static SIMULATIONDLL_API void Interpolation(const double, const double, double&, double&);
 	};
 
 }

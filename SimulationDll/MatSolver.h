@@ -138,7 +138,6 @@ namespace SIM {
 		void biCg_v() {
 			solverBiCgDia.compute(au);
 			u = solverBiCgDia.solveWithGuess(rhs, u);
-			u = solverBiCgDia.solve(rhs);
 			std::cout << " iterations ----------> " << solverBiCgDia.iterations() << std::endl;
 			std::cout << " error ---------------> " << solverBiCgDia.error() << std::endl;
 //			R rho;
@@ -412,7 +411,7 @@ namespace SIM {
 			for (int i = 0; i < D*n; i++) {
 				u[i] = rhs[i] = (0.0);
 			}
-			maxIter = 1000;
+			maxIter = 10000;
 			solverBiCgILU.preconditioner().setDroptol(eps);
 			solverBiCgILU.preconditioner().setFillfactor(1);
 			solverBiCgILU.setMaxIterations(maxIter);

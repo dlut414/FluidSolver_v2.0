@@ -187,6 +187,28 @@ void paintRB() {
 
 );
 
+const GLchar* fragment_stream = GLSL(330 core,
+
+const int BD2 = 0x00000000;
+const int FLUID = 0x00000001;
+const int BD1 = 0x00000002;
+const int INLET = 0x00000004;
+const int OUTLET = 0x00000008;
+
+uniform mat4 fMvpInv;
+uniform float sRangeMax;
+uniform float sRangeMin;
+
+in vec4 fPos;
+out vec4 color;
+
+void main() {
+	color = vec4(0, 0, 0, 1);
+	return;
+}
+
+);
+
 #define GLSL(version, shader)  "#version " #version "\n" #shader
 
 const GLchar* fragment_colorPick = GLSL(330 core,
