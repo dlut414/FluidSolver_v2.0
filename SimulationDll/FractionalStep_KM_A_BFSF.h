@@ -101,7 +101,7 @@ namespace SIM {
 
 		void VPE_q1r0() {
 			LHS_v_q1();
-			RHS_v_q1r0_nml();
+			RHS_v_q1r0();
 			solveMat_v();
 		}
 
@@ -239,7 +239,7 @@ namespace SIM {
 			mSol->au.setFromTriplets(coef.begin(), coef.end());
 		}
 
-		void RHS_v_q1r0_nml() {
+		void RHS_v_q1r0() {
 ///@ concept 1
 			const R coef_local = R(1) / (para.dt * para.Pr);
 			const R epsilon_local = 1.e-6;
@@ -298,8 +298,8 @@ namespace SIM {
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == OUTLET) {
 					//const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
-					mSol->rhs[2 * p + 0] = part->vel_p1[0][p] * abs(inletSum / outletSum);
-					mSol->rhs[2 * p + 1] = part->vel_p1[1][p] * abs(inletSum / outletSum);
+					mSol->rhs[2 * p + 0] = part->vel_p1[0][p];// *abs(inletSum / outletSum);
+					mSol->rhs[2 * p + 1] = part->vel_p1[1][p];// *abs(inletSum / outletSum);
 				}
 			}
 		}
@@ -726,7 +726,7 @@ namespace SIM {
 			}
 		}
 
-		template <int LOOP = 1>
+		template <int LOOP = 3>
 		void SpringLSIModel() {
 			std::vector<R> Dposx(part->np, R(0));
 			std::vector<R> Dposy(part->np, R(0));
@@ -735,6 +735,28 @@ namespace SIM {
 			std::vector<R> Du2x(part->np, R(0));
 			std::vector<R> Du2y(part->np, R(0));
 			const R coef = para.umax* para.dt;
+			R dis_min = std::numeric_limits<R>::max();
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] == OUTLET) continue;
+				const auto& cell = part->cell;
+				const int cx = cell->pos2cell(part->pos[0][p]);
+				const int cy = cell->pos2cell(part->pos[1][p]);
+				for (int i = 0; i < cell->blockSize::value; i++) {
+					const int key = cell->hash(cx, cy, i);
+					for (int m = 0; m < cell->linkList[key].size(); m++) {
+						const int q = cell->linkList[key][m];
+						if (q == p || part->type[q] == OUTLET) continue;
+						const R dr[2] = { part->pos[0][q] - part->pos[0][p], part->pos[1][q] - part->pos[1][p] };
+						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+						dis_min = dr1 < dis_min ? dr1 : dis_min;
+					}
+				}
+			}
+			if (dis_min > 0.6* part->dp) return;
+			std::cout << " Redistribute " << std::endl;
 #if OMP
 #pragma omp parallel for
 #endif
@@ -748,6 +770,7 @@ namespace SIM {
 #endif
 				for (int p = 0; p < part->np; p++) {
 					if (part->type[p] != FLUID) continue;
+					int flag = 0;
 					R Dpq[2] = { 0.0, 0.0 };
 					const auto& cell = part->cell;
 					const int cx = cell->pos2cell(part->pos[0][p]);
@@ -760,12 +783,14 @@ namespace SIM {
 							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
 							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
 							if (dr1 > part->r0) continue;
+							if (part->type[q] == INLET || part->type[q] == OUTLET) flag = 1;
 							const R w = part->ww(dr1);
 							const R coeff = w / dr1;
 							Dpq[0] -= coeff * dr[0];
 							Dpq[1] -= coeff * dr[1];
 						}
 					}
+					if (flag) continue;
 					Dposx[p] += coef* Dpq[0];
 					Dposy[p] += coef* Dpq[1];
 				}
@@ -793,6 +818,52 @@ namespace SIM {
 #endif
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] != FLUID) continue;
+				part->pos[0][p] = Dposx[p];
+				part->pos[1][p] = Dposy[p];
+				part->vel[0][p] = Du1x[p];
+				part->vel[1][p] = Du1y[p];
+				part->vel_p1[0][p] = Du2x[p];
+				part->vel_p1[1][p] = Du2y[p];
+			}
+		}
+
+		void StaticULSIModel() {
+			std::vector<R> Dposx(part->np, R(0));
+			std::vector<R> Dposy(part->np, R(0));
+			std::vector<R> Du1x(part->np, R(0));
+			std::vector<R> Du1y(part->np, R(0));
+			std::vector<R> Du2x(part->np, R(0));
+			std::vector<R> Du2y(part->np, R(0));
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				Dposx[p] = part->pos_m1[0][p];
+				Dposy[p] = part->pos_m1[1][p];
+			}
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] != FLUID) continue;
+				const Vec u1 = part->interpolateLSAU(part->vel[0].data(), part->vel[1].data(), p, Dposx[p], Dposy[p]);
+				Du1x[p] = u1[0];
+				Du1y[p] = u1[1];
+			}
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] != FLUID) continue;
+				const Vec u2 = part->interpolateLSAU(part->vel_p1[0].data(), part->vel_p1[1].data(), p, Dposx[p], Dposy[p]);
+				Du2x[p] = u2[0];
+				Du2y[p] = u2[1];
+			}
+#if OMP
+#pragma omp parallel for
+#endif
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] != FLUID && part->type[p] != INLET && part->type[p] != OUTLET) continue;
 				part->pos[0][p] = Dposx[p];
 				part->pos[1][p] = Dposy[p];
 				part->vel[0][p] = Du1x[p];
