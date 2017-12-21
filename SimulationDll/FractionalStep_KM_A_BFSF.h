@@ -58,7 +58,7 @@ namespace SIM {
 		void makeBC() {
 			for (int p = 0; p < part->np; p++) {
 				part->bdc[p] = 0;
-				if (part->type[p] == BD1 || part->type[p] == INLET/* || part->type[p] == OUTLET*/) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
+				if (part->type[p] == BD1 || part->type[p] == INLET) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
 			}
 		}
 		void b2neumann() {
@@ -71,6 +71,15 @@ namespace SIM {
 		}
 
 		void step() {
+			static int sw = 0;
+			if (sw) {
+				for (int p = 0; p < part->np; p++) {
+					if (part->type[p] == OUTLET) {
+						part->pos[0][p] -= part->vel[0][p] * 10;
+						part->pos[1][p] -= part->vel[1][p] * 10;
+					}
+				}
+			}
 			VPE_q1r0();
 			PPE_q1();
 			//adPres();
@@ -90,6 +99,13 @@ namespace SIM {
 			sync();
 			calCell();
 			calInvMat();
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] == OUTLET) {
+					part->pos[0][p] += part->vel[0][p] * 10;
+					part->pos[1][p] += part->vel[1][p] * 10;
+				}
+			}
+			sw = 1;
 		}
 
 		void Redistribute() {
@@ -298,8 +314,10 @@ namespace SIM {
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == OUTLET) {
 					//const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
-					mSol->rhs[2 * p + 0] = part->vel_p1[0][p];// *abs(inletSum / outletSum);
-					mSol->rhs[2 * p + 1] = part->vel_p1[1][p];// *abs(inletSum / outletSum);
+					//makeup for pressure gradient
+					//const Vec Du = part->Grad(part->pres.data(), p, FLUID | BD1);
+					mSol->rhs[2 * p + 0] = part->vel_p1[0][p];// +para.dt* Du[0];// *abs(inletSum / outletSum);
+					mSol->rhs[2 * p + 1] = part->vel_p1[1][p];// +para.dt* Du[1];// *abs(inletSum / outletSum);
 				}
 			}
 		}
@@ -564,6 +582,7 @@ namespace SIM {
 						p0[0] = part->pos[0][p];
 						p0[1] = part->pos[1][p];
 						const R dis = part->distance(part->outlet[it], p0);
+						//remove particle threshold
 						if (dis <= 0.3 * part->dp) rmId.push_back(p);
 					}
 				}
