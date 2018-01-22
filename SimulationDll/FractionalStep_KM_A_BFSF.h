@@ -718,6 +718,10 @@ namespace SIM {
 							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
 							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
 							if (dr1 > part->r0) continue;
+							///using dummy particle
+							//if (part->type[q] == INLET) flag = 1;
+							//if (part->type[q] == INLET || part->type[q] == OUTLET) continue;
+							///original
 							if (part->type[q] == INLET || part->type[q] == OUTLET) flag = 1;
 							const R w = part->ww(dr1);
 							const R coeff = w / dr1;
