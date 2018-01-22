@@ -58,7 +58,7 @@ namespace SIM {
 		void makeBC() {
 			for (int p = 0; p < part->np; p++) {
 				part->bdc[p] = 0;
-				if (part->type[p] == BD1 || part->type[p] == INLET/* || part->type[p] == OUTLET*/) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
+				if (part->type[p] == BD1 || part->type[p] == INLET) part->bdc[p] = ON(part->bdc[p], P_NEUMANN);
 			}
 		}
 		void b2neumann() {
@@ -71,6 +71,15 @@ namespace SIM {
 		}
 
 		void step() {
+			//static int sw = 0;
+			//if (sw) {
+			//	for (int p = 0; p < part->np; p++) {
+			//		if (part->type[p] == OUTLET) {
+			//			part->pos[0][p] -= part->vel[0][p] * 10;
+			//			part->pos[1][p] -= part->vel[1][p] * 10;
+			//		}
+			//	}
+			//}
 			VPE_q1r0();
 			PPE_q1();
 			//adPres();
@@ -90,6 +99,13 @@ namespace SIM {
 			sync();
 			calCell();
 			calInvMat();
+			//for (int p = 0; p < part->np; p++) {
+			//	if (part->type[p] == OUTLET) {
+			//		part->pos[0][p] += part->vel[0][p] * 10;
+			//		part->pos[1][p] += part->vel[1][p] * 10;
+			//	}
+			//}
+			//sw = 1;
 		}
 
 		void Redistribute() {
@@ -140,6 +156,14 @@ namespace SIM {
 				else if (part->type[p] == INLET) {
 					part->vel_p1[0][p] = part->vel[0][p];
 					part->vel_p1[1][p] = part->vel[1][p];
+				}
+				else if (part->type[p] == OUTLET) {
+					///no modification
+					///
+					///restrict velocity to bdnorm direction
+					//const Vec vel_p = (part->bdnorm[p][0] * part->vel_p1[0][p] + part->bdnorm[p][1] * part->vel_p1[1][p])* part->bdnorm[p];
+					//part->vel_p1[0][p] = vel_p[0];
+					//part->vel_p1[1][p] = vel_p[1];
 				}
 			}
 //#if OMP
@@ -262,8 +286,8 @@ namespace SIM {
 				}
 				else if (part->type[p] == OUTLET) {
 					int q = part->NearestFluid(p);
-					const Vec gradX_q = part->Grad(part->vel[0].data(), q, FLUID|BD1);
-					const Vec gradY_q = part->Grad(part->vel[1].data(), q, FLUID|BD1);
+					const Vec gradX_q = part->Grad(part->vel[0].data(), q, FLUID|BD1|OUTLET);
+					const Vec gradY_q = part->Grad(part->vel[1].data(), q, FLUID|BD1|OUTLET);
 					const Vec norm = part->bdnorm.at(p);
 					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
 					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
@@ -298,8 +322,10 @@ namespace SIM {
 			for (int p = 0; p < part->np; p++) {
 				if (part->type[p] == OUTLET) {
 					//const Vec lap_local = part->Lap(part->vel[0].data(), part->vel[1].data(), p);
-					mSol->rhs[2 * p + 0] = part->vel_p1[0][p];// *abs(inletSum / outletSum);
-					mSol->rhs[2 * p + 1] = part->vel_p1[1][p];// *abs(inletSum / outletSum);
+					//makeup for pressure gradient
+					//const Vec Du = part->Grad(part->pres.data(), p, FLUID | BD1);
+					mSol->rhs[2 * p + 0] = part->vel_p1[0][p];// +para.dt* Du[0];// *abs(inletSum / outletSum);
+					mSol->rhs[2 * p + 1] = part->vel_p1[1][p];// +para.dt* Du[1];// *abs(inletSum / outletSum);
 				}
 			}
 		}
@@ -505,11 +531,20 @@ namespace SIM {
 				if (part->type[p] == INLET) {
 					const R dr[2] = { part->pos[0][p] - part->pos_m1[0][p], part->pos[1][p] - part->pos_m1[1][p] };
 					const R dr2 = dr[0] * dr[0] + dr[1] * dr[1];
-					if (dr2 > dp2) {
-						inId.push_back(p);
-					}
+					if (dr2 > dp2) inId.push_back(p);
 				}
 				else if (part->type[p] == OUTLET) {
+					///make outlet able to inject particles
+					//const R dr[2] = { part->pos[0][p] - part->pos_m1[0][p], part->pos[1][p] - part->pos_m1[1][p] };
+					//const R dr2 = dr[0] * dr[0] + dr[1] * dr[1];
+					//const Vec norm = part->bdnorm.at(p);
+					//R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
+					//if (flowRate > 0) {
+					//	part->pos[0][p] = part->pos_m1[0][p];
+					//	part->pos[1][p] = part->pos_m1[1][p];
+					//}
+					//if (dr2 > dp2) inId.push_back(p);
+					///previous code
 					part->pos[0][p] = part->pos_m1[0][p];
 					part->pos[1][p] = part->pos_m1[1][p];
 				}
@@ -564,7 +599,8 @@ namespace SIM {
 						p0[0] = part->pos[0][p];
 						p0[1] = part->pos[1][p];
 						const R dis = part->distance(part->outlet[it], p0);
-						if (dis <= 0.3 * part->dp) rmId.push_back(p);
+						//remove particle threshold
+						if (dis <= 0.45 * part->dp) rmId.push_back(p);
 					}
 				}
 			}
@@ -654,7 +690,7 @@ namespace SIM {
 					}
 				}
 			}
-			if (dis_min > 0.6* part->dp) return;
+			if (dis_min > 0.7* part->dp) return;
 			std::cout << " Redistribute " << std::endl;
 #if OMP
 #pragma omp parallel for
@@ -682,6 +718,10 @@ namespace SIM {
 							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
 							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
 							if (dr1 > part->r0) continue;
+							///using dummy particle
+							//if (part->type[q] == INLET) flag = 1;
+							//if (part->type[q] == INLET || part->type[q] == OUTLET) continue;
+							///original
 							if (part->type[q] == INLET || part->type[q] == OUTLET) flag = 1;
 							const R w = part->ww(dr1);
 							const R coeff = w / dr1;
