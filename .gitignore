@@ -62,3 +62,4 @@ Sensor.in
 Debug
 
 tf_model/
+*.vcxproj
