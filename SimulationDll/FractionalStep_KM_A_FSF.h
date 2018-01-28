@@ -276,7 +276,7 @@ namespace SIM {
 		void LHS_p() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2 || part->type[p] == OUTLET) {
+				if (part->type[p] == BD2 || part->type[p] == OUTLET || fs[p]) {
 					coef.push_back(Tpl(p, p, R(1)));
 					continue;
 				}
