@@ -63,3 +63,4 @@ Debug
 
 tf_model/
 *.vcxproj
+*.pyc
