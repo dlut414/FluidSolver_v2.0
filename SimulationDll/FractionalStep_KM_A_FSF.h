@@ -15,6 +15,8 @@
 #include "Simulator.h"
 #include "Particle_x.h"
 #include "Shifter.h"
+#include <algorithm>
+#include <queue>
 #define BOOST_PYTHON_DYNAMIC_LIB
 #define BOOST_NUMPY_DYNAMIC_LIB
 #include <boost/python.hpp>
@@ -55,7 +57,7 @@ namespace SIM {
 			b2dirichlet();
 			calCell();
 			calInvMat();
-			fs = std::vector<bool>(np, false);
+			fs = std::vector<bool>(part->np, false);
 			sen = new Sensor<R, 2, PartX>(part);
 			*sen << "Sensor.in";
 			mSol = new Solver(int(derived().part->np), para.eps);
@@ -561,6 +563,7 @@ namespace SIM {
 				}
 			}
 			if (dis_min > 0.7* part->dp) return;
+			///distribute when dis_min <= 0.7* dp
 			std::cout << " Redistribute " << std::endl;
 #if OMP
 #pragma omp parallel for
@@ -652,7 +655,8 @@ namespace SIM {
 			exec("Layers = (17, 8, 8, 1)", global, global);
 			exec("nn = NN(Layers = Layers)", global, global);
 			exec("nn.load('./python/config')", global, global);
-			for (int p = 0; p < np; p++) {
+			const auto& pos = part->pos;
+			for (int p = 0; p < part->np; p++) {
 				static const int N = 8;
 				std::vector<int> nbr;
 				nNearestNeighbor<N>(nbr, p);
@@ -661,10 +665,10 @@ namespace SIM {
 					numpy_initialized = true;
 				}
 				NPY::ndarray x = NPY::zeros(make_tuple(2 * N + 1, 1), NPY::dtype::get_builtin<float>());
-				x[0][0] = type[p];
+				x[0][0] = part->type[p];
 				for (size_t i = 0; i < nbr.size(); i++) {
-					x[i * 2 + 1][0] = (pos[0][nbr[i]] - pos[0][p]) / dp;
-					x[i * 2 + 2][0] = (pos[1][nbr[i]] - pos[1][p]) / dp;
+					x[i * 2 + 1][0] = (pos[0][nbr[i]] - pos[0][p]) / part->dp;
+					x[i * 2 + 2][0] = (pos[1][nbr[i]] - pos[1][p]) / part->dp;
 				}
 				for (size_t i = nbr.size(); i < N; i++) {
 					x[i * 2 + 1][0] = 0;
@@ -677,6 +681,31 @@ namespace SIM {
 				object asscalar = np.attr("asscalar");
 				object iret = asscalar(ret);
 				fs[p] = bool(extract<int>(iret));
+			}
+		}
+
+		template <int N = 8>
+		void nNearestNeighbor(std::vector<int>& nbr, const int p) const {
+			typedef std::pair<R, int> R2i;
+			std::priority_queue<R2i, std::vector<R2i>, std::greater<R2i>> que;
+			const auto& cell = part->cell;
+			const auto& pos = part->pos;
+			const int cx = cell->pos2cell(pos[0][p]);
+			const int cy = cell->pos2cell(pos[1][p]);
+			for (int i = 0; i < cell->blockSize::value; i++) {
+				const int key = cell->hash(cx, cy, i);
+				for (int m = 0; m < cell->linkList[key].size(); m++) {
+					const int q = cell->linkList[key][m];
+					if (part->type[q] == BD2) continue;
+					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+					const R dr2 = dr[0] * dr[0] + dr[1] * dr[1];
+					que.push({ dr2, q });
+				}
+			}
+			for (int i = 0; i < N; i++) {
+				if (que.empty()) break;
+				nbr.push_back(que.top().second);
+				que.pop();
 			}
 		}
 
