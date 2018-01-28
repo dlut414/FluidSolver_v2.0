@@ -15,6 +15,11 @@
 #include "Simulator.h"
 #include "Particle_x.h"
 #include "Shifter.h"
+#define BOOST_PYTHON_DYNAMIC_LIB
+#define BOOST_NUMPY_DYNAMIC_LIB
+#include <boost/python.hpp>
+#include <boost/python/numpy.hpp>
+#include <Python.h>
 
 namespace SIM {
 
@@ -50,6 +55,7 @@ namespace SIM {
 			b2dirichlet();
 			calCell();
 			calInvMat();
+			fs = std::vector<bool>(np, false);
 			sen = new Sensor<R, 2, PartX>(part);
 			*sen << "Sensor.in";
 			mSol = new Solver(int(derived().part->np), para.eps);
@@ -67,18 +73,9 @@ namespace SIM {
 		}
 
 		void step() {
-			//static int sw = 0;
-			//if (sw) {
-			//	for (int p = 0; p < part->np; p++) {
-			//		if (part->type[p] == OUTLET) {
-			//			part->pos[0][p] -= part->vel[0][p] * 10;
-			//			part->pos[1][p] -= part->vel[1][p] * 10;
-			//		}
-			//	}
-			//}
+			makeFs();
 			VPE_q1r0();
 			PPE_q1();
-			//adPres();
 
 			syncPos();
 			adVel_q1();
@@ -95,20 +92,10 @@ namespace SIM {
 			sync();
 			calCell();
 			calInvMat();
-			//for (int p = 0; p < part->np; p++) {
-			//	if (part->type[p] == OUTLET) {
-			//		part->pos[0][p] += part->vel[0][p] * 10;
-			//		part->pos[1][p] += part->vel[1][p] * 10;
-			//	}
-			//}
-			//sw = 1;
 		}
 
 		void Redistribute() {
-			//SpringLSIModel();
-			SpringULSIModel();
-			//StaticLSIModel();
-			//StaticULSIModel();
+			nn_ULSIModel();
 		}
 
 		void VPE_q1r0() {
@@ -121,17 +108,6 @@ namespace SIM {
 			LHS_p();
 			RHS_p_q1();
 			solveMat_p();
-		}
-
-		void adPres() {
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == FLUID || part->type[p] == BD1 || part->type[p] == INLET || part->type[p] == OUTLET) {
-					part->pres[p] = part->phi[p];
-				}
-			}
 		}
 
 		void adVel_q1() {
@@ -154,63 +130,31 @@ namespace SIM {
 					part->vel_p1[1][p] = part->vel[1][p];
 				}
 				else if (part->type[p] == OUTLET) {
-					///no modification
-					///
-					///restrict velocity to bdnorm direction
-					//const Vec vel_p = (part->bdnorm[p][0] * part->vel_p1[0][p] + part->bdnorm[p][1] * part->vel_p1[1][p])* part->bdnorm[p];
-					//part->vel_p1[0][p] = vel_p[0];
-					//part->vel_p1[1][p] = vel_p[1];
 				}
 			}
-			//#if OMP
-			//#pragma omp parallel for
-			//#endif
-			//			for (int p = 0; p < part->np; p++) {
-			//				if (part->type[p] == OUTLET) {
-			//					int q = part->NearestFluid(p);
-			//					const Vec gradX_q = part->Grad(part->vel[0].data(), q);
-			//					const Vec gradY_q = part->Grad(part->vel[1].data(), q);
-			//					const Vec norm = part->bdnorm.at(p);
-			//					const Vec gradX_p = gradX_q - gradX_q.dot(norm) * norm;
-			//					const Vec gradY_p = gradY_q - gradY_q.dot(norm) * norm;
-			//					Vec Dqp;
-			//					Dqp[0] = part->pos[0][p] - part->pos[0][q];
-			//					Dqp[1] = part->pos[1][p] - part->pos[1][q];
-			//					part->vel_p1[0][p] = part->vel_p1[0][q] + gradX_p.dot(Dqp);
-			//					part->vel_p1[1][p] = part->vel_p1[1][q] + gradY_p.dot(Dqp);
-			//					R flowRate = part->vel_p1[0][p] * norm[0] + part->vel_p1[1][p] * norm[1];
-			//					if (flowRate < R(0)) {
-			//						std::cout << " Flow in at OUTLET ! " << std::endl;
-			//						std::cout << " Clamp to Zero ! " << std::endl;
-			//						part->vel_p1[0][p] = part->vel_p1[0][p] - flowRate * norm[0];
-			//						part->vel_p1[1][p] = part->vel_p1[1][p] - flowRate * norm[1];
-			//						flowRate = 0;
-			//					}
-			//				}
-			//			}
 		}
 
 		void adPos_s1() {
-			//			const R coef_local = R(0.5)* para.dt;
-			//#if OMP
-			//#pragma omp parallel for
-			//#endif
-			//			for (int p = 0; p < part->np; p++) {
-			//				if (part->type[p] == FLUID) {
-			//					part->pos[0][p] += coef_local * (part->vel[0][p] + part->vel_p1[0][p]);
-			//					part->pos[1][p] += coef_local * (part->vel[1][p] + part->vel_p1[1][p]);
-			//				}
-			//			}
-			const R coef_local = para.dt;
+			const R coef_local = R(0.5)* para.dt;
 #if OMP
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == FLUID || part->type[p] == INLET || part->type[p] == OUTLET) {
-					part->pos[0][p] += coef_local * (part->vel[0][p]);
-					part->pos[1][p] += coef_local * (part->vel[1][p]);
+				if (part->type[p] == FLUID) {
+					part->pos[0][p] += coef_local * (part->vel[0][p] + part->vel_p1[0][p]);
+					part->pos[1][p] += coef_local * (part->vel[1][p] + part->vel_p1[1][p]);
 				}
 			}
+//			const R coef_local = para.dt;
+//#if OMP
+//#pragma omp parallel for
+//#endif
+//			for (int p = 0; p < part->np; p++) {
+//				if (part->type[p] == FLUID || part->type[p] == INLET || part->type[p] == OUTLET) {
+//					part->pos[0][p] += coef_local * (part->vel[0][p]);
+//					part->pos[1][p] += coef_local * (part->vel[1][p]);
+//				}
+//			}
 		}
 
 	public:
@@ -378,13 +322,12 @@ namespace SIM {
 				}
 				else if (part->type[p] == OUTLET) {
 					///Dirichlet condition by extrapolation
-					//int q = part->NearestFluid(p);
-					//const Vec grad = part->Grad(part->pres.data(), q, FLUID|BD1);
-					//Vec Dqp;
-					//Dqp[0] = part->pos[0][p] - part->pos[0][q];
-					//Dqp[1] = part->pos[1][p] - part->pos[1][q];
-					//mSol->b[p] = part->pres[q] + grad.dot(Dqp);
-					mSol->b[p] = R(0);
+					int q = part->NearestFluid(p);
+					const Vec grad = part->Grad(part->pres.data(), q, FLUID|BD1);
+					Vec Dqp;
+					Dqp[0] = part->pos[0][p] - part->pos[0][q];
+					Dqp[1] = part->pos[1][p] - part->pos[1][q];
+					mSol->b[p] = part->pres[q] + grad.dot(Dqp);
 					continue;
 				}
 				const R div_local = part->Div(part->vel_p1[0].data(), part->vel_p1[1].data(), p);
@@ -420,75 +363,6 @@ namespace SIM {
 					//else if (part->type[p] == OUTLET) {
 					//	///neumann = 0;
 					//}
-				}
-			}
-		}
-
-		void LHS_t_q1CN() {
-			coef.clear();
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2) {
-					coef.push_back(Tpl(p, p, R(1)));
-					continue;
-				}
-				if (IS(part->bdc[p], T_DIRICHLET)) {
-					coef.push_back(Tpl(p, p, R(1)));
-					continue;
-				}
-				R pqsum = R(0);
-				R pp = R(0);
-				MatPP* mm;
-				if (IS(part->bdc[p], T_NEUMANN))	mm = &(part->invNeu.at(p));
-				else								mm = &(part->invMat[p]);
-				const R coefL = -R(0.5)* para.dt;
-				const auto& cell = part->cell;
-				const int cx = cell->pos2cell(part->pos[0][p]);
-				const int cy = cell->pos2cell(part->pos[1][p]);
-				for (int i = 0; i < cell->blockSize::value; i++) {
-					const int key = cell->hash(cx, cy, i);
-					for (int m = 0; m < cell->linkList[key].size(); m++) {
-						const int q = cell->linkList[key][m];
-						if (part->type[q] == BD2) continue;
-						const R dr[2] = { part->pos[0][q] - part->pos[0][p], part->pos[1][q] - part->pos[1][p] };
-						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-						if (dr1 > part->r0) continue;
-						const R w = part->ww(dr1);
-						VecP npq;
-						part->poly(dr, npq.data());
-						const VecP aa = (*mm) * (w* npq);
-						const R pq = coefL* (part->pn_lap_o.dot(aa));
-						pp -= pq;
-						if (q == p) continue;
-						coef.push_back(Tpl(p, q, pq));
-					}
-				}
-				pp += R(1);
-				coef.push_back(Tpl(p, p, pp));
-			}
-			mSol->a.setFromTriplets(coef.begin(), coef.end());
-		}
-
-		void RHS_t_q1CN() {
-			const R coef_local = R(0.5)* para.dt;
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2) {
-					mSol->b[p] = R(0);
-					continue;
-				}
-				if (IS(part->bdc[p], T_DIRICHLET)) {
-					mSol->b[p] = part->t_dirichlet.at(p);
-					continue;
-				}
-				mSol->b[p] = part->temp[p] + coef_local* part->Lap(part->temp.data(), p);
-				if (IS(part->bdc[p], T_NEUMANN)) {
-					VecP inner = VecP::Zero();
-					inner.block<2, 1>(0, 0) = part->bdnorm.at(p);
-					const VecP aa = part->invNeu.at(p)* inner;
-					const R cst = part->p_neumann.at(p)*part->ww(0.0)* (1.0 / part->varrho) * (part->pn_lap_o.dot(aa));
-					mSol->b[p] -= cst;
 				}
 			}
 		}
@@ -658,7 +532,7 @@ namespace SIM {
 		}
 
 		template <int LOOP = 3>
-		void SpringULSIModel() {
+		void nn_ULSIModel() {
 			std::vector<R> Dposx(part->np, R(0));
 			std::vector<R> Dposy(part->np, R(0));
 			std::vector<R> Du1x(part->np, R(0));
@@ -762,156 +636,59 @@ namespace SIM {
 			}
 		}
 
-		template <int LOOP = 3>
-		void SpringLSIModel() {
-			std::vector<R> Dposx(part->np, R(0));
-			std::vector<R> Dposy(part->np, R(0));
-			std::vector<R> Du1x(part->np, R(0));
-			std::vector<R> Du1y(part->np, R(0));
-			std::vector<R> Du2x(part->np, R(0));
-			std::vector<R> Du2y(part->np, R(0));
-			const R coef = para.umax* para.dt;
-			R dis_min = std::numeric_limits<R>::max();
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == OUTLET) continue;
-				const auto& cell = part->cell;
-				const int cx = cell->pos2cell(part->pos[0][p]);
-				const int cy = cell->pos2cell(part->pos[1][p]);
-				for (int i = 0; i < cell->blockSize::value; i++) {
-					const int key = cell->hash(cx, cy, i);
-					for (int m = 0; m < cell->linkList[key].size(); m++) {
-						const int q = cell->linkList[key][m];
-						if (q == p || part->type[q] == OUTLET) continue;
-						const R dr[2] = { part->pos[0][q] - part->pos[0][p], part->pos[1][q] - part->pos[1][p] };
-						const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-						dis_min = dr1 < dis_min ? dr1 : dis_min;
-					}
+		void makeFs() {
+			using namespace boost::python;
+			namespace NPY = boost::python::numpy;
+			if (!python_initialized) {
+				Py_Initialize();
+				main_module = import("__main__");
+				global = main_module.attr("__dict__");
+				python_initialized = true;
+			}
+			exec("import sys", global, global);
+			exec("sys.path.append('./python')", global, global);
+			exec("import numpy", global, global);
+			exec("from NN import NN as NN", global, global);
+			exec("Layers = (17, 8, 8, 1)", global, global);
+			exec("nn = NN(Layers = Layers)", global, global);
+			exec("nn.load('./python/config')", global, global);
+			for (int p = 0; p < np; p++) {
+				static const int N = 8;
+				std::vector<int> nbr;
+				nNearestNeighbor<N>(nbr, p);
+				if (!numpy_initialized) {
+					NPY::initialize();
+					numpy_initialized = true;
 				}
-			}
-			if (dis_min > 0.6* part->dp) return;
-			std::cout << " Redistribute " << std::endl;
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				Dposx[p] = part->pos[0][p];
-				Dposy[p] = part->pos[1][p];
-			}
-			for (int iter = 0; iter < LOOP; iter++) {
-#if OMP
-#pragma omp parallel for
-#endif
-				for (int p = 0; p < part->np; p++) {
-					if (part->type[p] != FLUID) continue;
-					int flag = 0;
-					R Dpq[2] = { 0.0, 0.0 };
-					const auto& cell = part->cell;
-					const int cx = cell->pos2cell(part->pos[0][p]);
-					const int cy = cell->pos2cell(part->pos[1][p]);
-					for (int i = 0; i < cell->blockSize::value; i++) {
-						const int key = cell->hash(cx, cy, i);
-						for (int m = 0; m < cell->linkList[key].size(); m++) {
-							const int q = cell->linkList[key][m];
-							if (q == p) continue;
-							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
-							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-							if (dr1 > part->r0) continue;
-							if (part->type[q] == INLET || part->type[q] == OUTLET) flag = 1;
-							const R w = part->ww(dr1);
-							const R coeff = w / dr1;
-							Dpq[0] -= coeff * dr[0];
-							Dpq[1] -= coeff * dr[1];
-						}
-					}
-					if (flag) continue;
-					Dposx[p] += coef* Dpq[0];
-					Dposy[p] += coef* Dpq[1];
+				NPY::ndarray x = NPY::zeros(make_tuple(2 * N + 1, 1), NPY::dtype::get_builtin<float>());
+				x[0][0] = type[p];
+				for (size_t i = 0; i < nbr.size(); i++) {
+					x[i * 2 + 1][0] = (pos[0][nbr[i]] - pos[0][p]) / dp;
+					x[i * 2 + 2][0] = (pos[1][nbr[i]] - pos[1][p]) / dp;
 				}
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != FLUID) continue;
-				const Vec u1 = part->interpolateLSA(part->vel[0].data(), part->vel[1].data(), p, Dposx[p], Dposy[p]);
-				Du1x[p] = u1[0];
-				Du1y[p] = u1[1];
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != FLUID) continue;
-				const Vec u2 = part->interpolateLSA(part->vel_p1[0].data(), part->vel_p1[1].data(), p, Dposx[p], Dposy[p]);
-				Du2x[p] = u2[0];
-				Du2y[p] = u2[1];
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != FLUID) continue;
-				part->pos[0][p] = Dposx[p];
-				part->pos[1][p] = Dposy[p];
-				part->vel[0][p] = Du1x[p];
-				part->vel[1][p] = Du1y[p];
-				part->vel_p1[0][p] = Du2x[p];
-				part->vel_p1[1][p] = Du2y[p];
-			}
-		}
-
-		void StaticULSIModel() {
-			std::vector<R> Dposx(part->np, R(0));
-			std::vector<R> Dposy(part->np, R(0));
-			std::vector<R> Du1x(part->np, R(0));
-			std::vector<R> Du1y(part->np, R(0));
-			std::vector<R> Du2x(part->np, R(0));
-			std::vector<R> Du2y(part->np, R(0));
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				Dposx[p] = part->pos_m1[0][p];
-				Dposy[p] = part->pos_m1[1][p];
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != FLUID) continue;
-				const Vec u1 = part->interpolateLSAU(part->vel[0].data(), part->vel[1].data(), p, Dposx[p], Dposy[p]);
-				Du1x[p] = u1[0];
-				Du1y[p] = u1[1];
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != FLUID) continue;
-				const Vec u2 = part->interpolateLSAU(part->vel_p1[0].data(), part->vel_p1[1].data(), p, Dposx[p], Dposy[p]);
-				Du2x[p] = u2[0];
-				Du2y[p] = u2[1];
-			}
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != FLUID && part->type[p] != INLET && part->type[p] != OUTLET) continue;
-				part->pos[0][p] = Dposx[p];
-				part->pos[1][p] = Dposy[p];
-				part->vel[0][p] = Du1x[p];
-				part->vel[1][p] = Du1y[p];
-				part->vel_p1[0][p] = Du2x[p];
-				part->vel_p1[1][p] = Du2y[p];
+				for (size_t i = nbr.size(); i < N; i++) {
+					x[i * 2 + 1][0] = 0;
+					x[i * 2 + 2][0] = 0;
+				}
+				object nn = global["nn"];
+				object predict01 = nn.attr("predict01");
+				object ret = predict01(x);
+				object np = global["numpy"];
+				object asscalar = np.attr("asscalar");
+				object iret = asscalar(ret);
+				fs[p] = bool(extract<int>(iret));
 			}
 		}
 
 	private:
 		Shifter<R, 2> shi;
 		std::vector<Tpl> coef;
+		std::vector<bool> fs;
+		///for python
+		bool python_initialized;
+		bool numpy_initialized;
+		boost::python::object main_module;
+		boost::python::object global;
 	};
 
 	template <typename R, int P>

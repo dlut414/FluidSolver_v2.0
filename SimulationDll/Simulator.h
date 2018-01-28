@@ -256,14 +256,6 @@ namespace SIM {
 			derived().part->updateInvMat();
 		}
 
-		void makeFs() {
-			auto* const part = derived().part;
-#if OMP
-#pragma omp parallel for
-#endif
-			for (int p = 0; p < int(part->np); p++) part->fs[p] = part->_isFs(p);
-		}
-
 		void calForVis() {
 			auto* const part = derived().part;
 #if OMP
