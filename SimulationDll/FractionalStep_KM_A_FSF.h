@@ -564,6 +564,7 @@ namespace SIM {
 			}
 			if (dis_min > 0.7* part->dp) return;
 			///distribute when dis_min <= 0.7* dp
+			///Dposx hold new pos
 			std::cout << " Redistribute " << std::endl;
 #if OMP
 #pragma omp parallel for
@@ -572,41 +573,73 @@ namespace SIM {
 				Dposx[p] = part->pos[0][p];
 				Dposy[p] = part->pos[1][p];
 			}
-			for (int iter = 0; iter < LOOP; iter++) {
-#if OMP
-#pragma omp parallel for
-#endif
-				for (int p = 0; p < part->np; p++) {
-					if (part->type[p] != FLUID) continue;
-					int flag = 0;
-					R Dpq[2] = { 0.0, 0.0 };
-					const auto& cell = part->cell;
-					const int cx = cell->pos2cell(part->pos[0][p]);
-					const int cy = cell->pos2cell(part->pos[1][p]);
-					for (int i = 0; i < cell->blockSize::value; i++) {
-						const int key = cell->hash(cx, cy, i);
-						for (int m = 0; m < cell->linkList[key].size(); m++) {
-							const int q = cell->linkList[key][m];
-							if (q == p) continue;
-							const R dr[2] = { Dposx[q] - Dposx[p], Dposy[q] - Dposy[p] };
-							const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
-							if (dr1 > part->r0) continue;
-							///using dummy particle
-							//if (part->type[q] == INLET) flag = 1;
-							//if (part->type[q] == INLET || part->type[q] == OUTLET) continue;
-							///original
-							if (part->type[q] == INLET || part->type[q] == OUTLET) flag = 1;
-							const R w = part->ww(dr1);
-							const R coeff = w / dr1;
-							Dpq[0] -= coeff * dr[0];
-							Dpq[1] -= coeff * dr[1];
-						}
-					}
-					if (flag) continue;
-					Dposx[p] += coef* Dpq[0];
-					Dposy[p] += coef* Dpq[1];
+
+			using namespace boost::python;
+			namespace NPY = boost::python::numpy;
+			if (!python_initialized) {
+				Py_Initialize();
+				python_initialized = true;
+			}
+			if (!numpy_initialized) {
+				NPY::initialize();
+				main_module = import("__main__");
+				global = main_module.attr("__dict__");
+				numpy_initialized = true;
+			}
+			try {
+				exec("import numpy as np", global, global);
+				exec("import tensorflow as tf", global, global);
+				exec("sess = tf.Session()", global, global);
+				exec("saver = tf.train.import_meta_graph('./python/tf_model/model.meta')", global, global);
+				exec("saver.restore(sess, tf.train.latest_checkpoint('./python/tf_model/'))", global, global);
+				exec("graph = tf.get_default_graph()", global, global);
+				exec("x = graph.get_tensor_by_name('x:0')", global, global);
+				exec("y = graph.get_tensor_by_name('y:0')", global, global);
+			}
+			catch (const error_already_set&) {
+				PyErr_Print();
+			}
+			const auto& pos = part->pos;
+			const auto& dp = part->dp;
+			for (int p = 0; p < part->np; p++) {
+				if (part->type[p] != FLUID || fs[p]) continue;
+				const int N = 24;
+				std::vector<int> nbr;
+				nNearestNeighbor<N>(nbr, p);
+				if (!numpy_initialized) {
+					NPY::initialize();
+					numpy_initialized = true;
+				}
+				NPY::ndarray xx = NPY::zeros(make_tuple(1, 2 * N), NPY::dtype::get_builtin<float>());
+				for (size_t i = 0; i < nbr.size(); i++) {
+					xx[0][i * 2] = (pos[0][nbr[i]] - pos[0][p]) / dp;
+					xx[0][i * 2 + 1] = (pos[1][nbr[i]] - pos[1][p]) / dp;
+				}
+				for (size_t i = nbr.size(); i < N; i++) {
+					xx[0][i * 2] = 0;
+					xx[0][i * 2 + 1] = 0;
+				}
+				///predict here
+				try {
+					object x = global["x"];
+					object y = global["y"];
+					dict feed_dict;
+					feed_dict[x] = xx;
+					///sess argument to y.attr("eval")() must be defined as object first
+					object sess = global["sess"];
+					object res = y.attr("eval")(feed_dict, sess);
+					object item = res.attr("item");
+					R vx = extract<R>(item(0));
+					R vy = extract<R>(item(1));
+					Dposx[p] += dp* vx;
+					Dposy[p] += dp* vy;
+				}
+				catch (const error_already_set&) {
+					PyErr_Print();
 				}
 			}
+			exec("sess.close()", global, global);
+
 #if OMP
 #pragma omp parallel for
 #endif
