@@ -57,10 +57,14 @@ namespace SIM {
 			b2dirichlet();
 			calCell();
 			calInvMat();
-			fs = std::vector<bool>(part->np, false);
+			fs = std::vector<R>(part->np, 0);
 			sen = new Sensor<R, 2, PartX>(part);
 			*sen << "Sensor.in";
 			mSol = new Solver(int(derived().part->np), para.eps);
+		}
+
+		R* Surface() {
+			return fs.data();
 		}
 
 		void makeBC() {
@@ -276,7 +280,7 @@ namespace SIM {
 		void LHS_p() {
 			coef.clear();
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2 || part->type[p] == OUTLET || fs[p]) {
+				if (part->type[p] == BD2 || part->type[p] == OUTLET || fs[p] > 0.5) {
 					coef.push_back(Tpl(p, p, R(1)));
 					continue;
 				}
@@ -319,7 +323,7 @@ namespace SIM {
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2 || fs[p]) {
+				if (part->type[p] == BD2 || fs[p] > 0.5) {
 					mSol->b[p] = R(0);
 					continue;
 				}
@@ -603,7 +607,7 @@ namespace SIM {
 			const auto& pos = part->pos;
 			const auto& dp = part->dp;
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] != FLUID || fs[p]) continue;
+				if (part->type[p] != FLUID || fs[p] > 0.5) continue;
 				const int N = 24;
 				std::vector<int> nbr;
 				nNearestNeighbor<N>(nbr, p);
@@ -714,7 +718,7 @@ namespace SIM {
 				object np = global["numpy"];
 				object asscalar = np.attr("asscalar");
 				object iret = asscalar(ret);
-				fs[p] = bool(extract<int>(iret));
+				fs[p] = R(extract<int>(iret));
 			}
 		}
 
@@ -746,7 +750,7 @@ namespace SIM {
 	private:
 		Shifter<R, 2> shi;
 		std::vector<Tpl> coef;
-		std::vector<bool> fs;
+		std::vector<R> fs;
 		///for python
 		bool python_initialized;
 		bool numpy_initialized;

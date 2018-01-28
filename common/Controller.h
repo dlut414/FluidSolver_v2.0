@@ -11,7 +11,7 @@
 
 namespace VIS {
 
-	enum DISPLAYMODE { DMODE_ONE = 1, DMODE_TWO = 2, DMODE_THREE = 3, DMODE_FOUR = 4, DMODE_FIVE = 5, DMODE_SIX = 6, };
+	enum DISPLAYMODE { DMODE_ZERO = 0, DMODE_ONE = 1, DMODE_TWO = 2, DMODE_THREE = 3, DMODE_FOUR = 4, DMODE_FIVE = 5, DMODE_SIX = 6, };
 
 	class Controller {
 	public:

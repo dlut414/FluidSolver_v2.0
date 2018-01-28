@@ -29,6 +29,10 @@ static void setTwVisible(TwBar* const bar, const int visible);
 static void Render() {
 	//Visualization::Run(&control, Parameters::Dimension, Simulation::Number(), Simulation::Type(), Simulation::Position(), Simulation::Scalar());
 	switch (control.m_mode) {
+	case VIS::DMODE_ZERO:
+		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Surface());
+		setTwVisible(StreamBar, 0);
+		break;
 	case VIS::DMODE_ONE:
 		Visualization::Run(&control, Simulation::Number(), Simulation::Type(), Simulation::PositionX(), Simulation::PositionY(), Simulation::Vorticity());
 		setTwVisible(StreamBar, 0);
@@ -227,8 +231,8 @@ static void Initialize(int argc, char** argv) {
 	TwWindowSize(control.u_width, control.u_height);
 	GUIBar = TwNewBar("GUI");
 	TwDefine(" GUI size='180 300' position='0 0' ");
-	TwEnumVal ev[] = { { VIS::DMODE_ONE, "Vorticity" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, { VIS::DMODE_SIX, "Streamline" } };
-	TwType quantity = TwDefineEnum("quantity", ev, 6);
+	TwEnumVal ev[] = { { VIS::DMODE_ZERO, "surface" }, { VIS::DMODE_ONE, "Vorticity" }, { VIS::DMODE_TWO, "Divergence" }, { VIS::DMODE_THREE, "Pressure" }, { VIS::DMODE_FOUR, "VelocityX" }, { VIS::DMODE_FIVE, "VelocityY" }, { VIS::DMODE_SIX, "Streamline" } };
+	TwType quantity = TwDefineEnum("quantity", ev, 7);
 	TwAddVarRW(GUIBar, "Quantity", quantity, &control.m_mode, " group='Display' ");
 	TwAddVarRW(GUIBar, "Min", TW_TYPE_FLOAT, &control.f_sRangeMin, " group='Range' ");
 	TwAddVarRW(GUIBar, "Max", TW_TYPE_FLOAT, &control.f_sRangeMax, " group='Range' ");
