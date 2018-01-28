@@ -247,8 +247,9 @@ namespace SIM {
 					outletSum += flowRate * part->dp;
 				}
 				else if (part->type[p] == FLUID) {
+					/// gravity is adjusted here
 					const R rhsx = coef_local* part->vel[0][p];
-					const R rhsy = coef_local* part->vel[1][p];
+					const R rhsy = coef_local* part->vel[1][p] + (1.0 / para.Pr);
 					mSol->rhs[2 * p + 0] = rhsx;
 					mSol->rhs[2 * p + 1] = rhsy;
 				}
@@ -318,7 +319,7 @@ namespace SIM {
 #pragma omp parallel for
 #endif
 			for (int p = 0; p < part->np; p++) {
-				if (part->type[p] == BD2) {
+				if (part->type[p] == BD2 || fs[p]) {
 					mSol->b[p] = R(0);
 					continue;
 				}
