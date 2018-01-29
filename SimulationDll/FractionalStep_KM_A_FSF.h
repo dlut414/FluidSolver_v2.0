@@ -33,6 +33,7 @@ namespace SIM {
 
 	template <typename R, int P>
 	class FractionalStep_KM_A_FSF<R, 2, P> : public Simulator<R, 2, FractionalStep_KM_A_FSF<R, 2, P>>{
+	public:
 		typedef mMath::Polynomial_A<R, 2, P> PN;
 		typedef mMath::Derivative_A<R, 2, P> DR;
 		typedef Eigen::Matrix<R, PN::value, 1> VecP;
@@ -41,7 +42,8 @@ namespace SIM {
 		typedef Eigen::Triplet<R> Tpl;
 		typedef MatSolver<R, 2, 0> Solver;
 		typedef Particle_x<R, 2, P> PartX;
-	public:
+		typedef typename PartX::Mat Mat;
+	
 		FractionalStep_KM_A_FSF() {}
 		~FractionalStep_KM_A_FSF() {}
 
@@ -677,7 +679,82 @@ namespace SIM {
 			}
 		}
 
+		R isFs(int p) {
+			const auto& cell = part->cell;
+			const auto& pos = part->pos;
+			const auto& type = part->type;
+			const auto& dp = part->dp;
+			const auto& r0 = part->r0;
+			if (type[p] == BD2) return 0;
+			Mat mm = Mat::Zero();
+			//vec gc = vec(0., 0., 0.);
+			const int cx = cell->pos2cell(pos[0][p]);
+			const int cy = cell->pos2cell(pos[1][p]);
+			for (int i = 0; i < cell->blockSize::value; i++) {
+				const int key = cell->hash(cx, cy, i);
+				for (int m = 0; m < cell->linkList[key].size(); m++) {
+					const int q = cell->linkList[key][m];
+					if (q == p) continue;
+					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+					if (dr1 > r0) continue;
+					const R  w = part->ww(dr1);
+					Vec npq;
+					npq[0] = dr[0] / dr1;
+					npq[1] = dr[1] / dr1;
+					mm += (w* npq)* npq.transpose();
+					//gc += w* npq;
+				}
+			}
+			//gc = gc.norm();
+			//mm = (R(2) / n0)* mm;
+			Eigen::SelfAdjointEigenSolver<Mat> sol(mm);
+			Vec eig = sol.eigenvalues();
+			Mat eigvs = sol.eigenvectors();
+			R eigmin = eig[0];
+			Vec neigv1 = eigvs.col(0);
+			if (eigmin <= 0.2) return 1;
+			if (eigmin > 0.8) return 0;
+			Vec neigv2 = -neigv1;
+			//if (neigv * gc > 0.) neigv = -1.*neigv;
+			//gc = -1. * gc;
+			const R root2 = 1.415;
+			int flag1 = 1, flag2 = 1;
+			for (int i = 0; i < cell->blockSize::value; i++) {
+				const int key = cell->hash(cx, cy, i);
+				for (int m = 0; m < cell->linkList[key].size(); m++) {
+					const int q = cell->linkList[key][m];
+					if (q == p) continue;
+					const R dr[2] = { pos[0][q] - pos[0][p], pos[1][q] - pos[1][p] };
+					const R dr1 = sqrt(dr[0] * dr[0] + dr[1] * dr[1]);
+					Vec drv, posp, posq;
+					drv[0] = dr[0]; drv[1] = dr[1];
+					posp[0] = pos[0][p]; posp[1] = pos[1][p];
+					posq[0] = pos[0][q]; posq[1] = pos[1][q];
+					if (dr1 < root2 * dp) {
+						if ((drv / dr1).dot(neigv1) >(root2 / 2.)) flag1 = 0;
+						if ((drv / dr1).dot(neigv2) > (root2 / 2.)) flag2 = 0;
+					}
+					else {
+						if ((posp + dp * neigv1 - posq).norm() < dp) flag1 = 0;
+						if ((posp + dp * neigv2 - posq).norm() < dp) flag2 = 0;
+					}
+				}
+			}
+			if (flag1) {
+				return 1;
+			}
+			if (flag2) {
+				return 1;
+			}
+			return 0;
+		}
 		void makeFs() {
+			for (int p = 0; p < part->np; p++) {
+				fs[p] = isFs(p);
+			}
+		}
+		void makeFsML() {
 			using namespace boost::python;
 			namespace NPY = boost::python::numpy;
 			if (!python_initialized) {

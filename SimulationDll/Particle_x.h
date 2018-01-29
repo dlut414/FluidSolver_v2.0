@@ -24,6 +24,7 @@ namespace SIM {
 
 	template <typename R, int P>
 	class Particle_x<R,2,P> : public Particle<R,2,Particle_x<R,2,P>> {
+	public:
 		typedef mMath::Polynomial_A<R,2,P> PN;
 		typedef mMath::Derivative_A<R,2,P> DR;
 		typedef mMath::Polynomial_A<R,2,P+1> PNH;
@@ -34,7 +35,7 @@ namespace SIM {
 		typedef Eigen::Matrix<R,PN::value,1> VecP;
 		typedef Eigen::Matrix<R,PN::value,2> MatPD;
 		typedef Eigen::Matrix<R,PN::value,PN::value> MatPP;
-	public:
+
 		Particle_x() : Particle() {}
 		~Particle_x() {}
 
